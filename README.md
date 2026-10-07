@@ -1,56 +1,78 @@
 # Chthonia
 
-An easy IDE to learn C and C++ in: the editor, a C REPL (a Read–eval–print loop)
-below it and the Symbols view beside it, with Run (F5) and Stop on the
-toolbar. Type a line of C in the REPL and see its value; run the whole file
-and see its output; the Symbols view lists what the REPL's session holds.
+**An easy place to learn C and C++.**
 
-Chthonia is built on madcide, the IDE that comes with
-[madc](https://github.com/derekbsnider/madc), and runs on madc's engine:
-there is no separate compiler to install.
+Chthonia is a small, friendly code editor for beginners. Write a program
+at the top, press **F5**, and see what it prints at the bottom. Or skip the
+program entirely: type one line of C into the REPL and see its value right
+away.
 
-## What it needs
+<!-- A screenshot goes here: docs/images/chthonia.png -->
 
-A madc installation: `madc`, `libmadc`, `libmadcide` and madcide's data, of
-the madc release Chthonia was built with or a newer one. On Linux, its window
-needs WebKitGTK 6.0 and GTK 4 (Debian and Ubuntu: `libwebkitgtk-6.0-4
-libgtk-4-1`; Fedora: `webkitgtk6.0 gtk4`).
+Chthonia runs on [madc](https://github.com/derekbsnider/madc), so there is
+no separate compiler to install and nothing to configure.
 
-## Installing
+## What you can do
 
-Chthonia installs into the madc installation it runs on.
+- **Write** C, C++ or madc in an editor with syntax colours, find and
+  replace, undo, and tabs for your open files.
+- **Try things out** in the REPL, a *Read–eval–print loop*: type
+  `int x = 6 * 7;`, then `x + 1`, and it prints `43`.
+- **Run** the whole file with **F5**. Its output appears in the REPL, and
+  you type its input there too.
+- **See your names**: the Symbols view lists the functions and variables
+  you have defined.
+- **Find mistakes**: saving checks the file and lists any problems; click
+  one to jump to its line.
+- **Get help** without leaving: **Help ▸ Help Contents** opens beside your
+  files.
 
-- **Ubuntu**: with madc's `.deb` for your Ubuntu release installed,
-  `sudo apt install ./chthonia_<version>-1~ubuntu<release>_amd64.deb` (each
-  Ubuntu release has its own, as madc does: `~ubuntu24.04`, `~ubuntu22.04`).
-- **Fedora**: with madc's `.rpm` installed,
-  `sudo dnf install ./chthonia-<version>-1.x86_64.rpm`.
-- **madc's tarball** (Linux, macOS): unpack Chthonia's tarball into the madc
-  folder, `tar -xzf chthonia-<version>-<os>-<arch>.tar.gz -C <madc folder>`.
-- **Windows**: unzip `chthonia-<version>-windows-x86_64.zip` into the madc
-  folder; `chthonia.exe` goes beside `madc.exe`.
+## Install
 
-## Running
+Install madc first, then Chthonia. Chthonia needs madc 0.102.0 or newer.
 
-    chthonia hello.c
+| Your computer | Download | Then |
+|:--|:--|:--|
+| Ubuntu 24.04 or 22.04 (also in WSL) | madc's and Chthonia's `.deb` for your Ubuntu version | `sudo apt install ./madc_*.deb ./chthonia_*.deb` |
+| Windows 10 or 11 | madc's and Chthonia's `.zip` | Unzip madc, unzip Chthonia into the madc folder, run `bin\chthonia.exe` |
+| macOS (Apple silicon or Intel) | madc's and Chthonia's `.tar.gz` for your Mac | Unpack madc, unpack Chthonia into the madc folder, run `bin/chthonia` |
 
-opens a window (`--tui` uses the terminal instead). Its key style, layout
-and menus are its bundle, which installs as one of madcide's plugins; Tools ▸
-Key bindings… switches among madcide's key styles.
+Chthonia's packages are on its
+[releases page](https://github.com/derekbsnider/chthonia/releases); madc's
+are on [madc's](https://github.com/derekbsnider/madc/releases). Step-by-step
+instructions: [Installing Chthonia](docs/install.md).
 
-## Building from source
+## Your first program
 
-The scripts take the madc to use from `MADC` (default: `madc` on `PATH`) and
-madcide's headers from beside it.
+1. Start Chthonia.
+2. **File ▸ New**, and type:
 
-    scripts/build.sh                     # build/chthonia
-    scripts/run_tests.sh                 # the console tests (tests/)
-    xvfb-run scripts/run_tests.sh --gui  # the window tests (tests/gui/)
-    scripts/package_linux.sh             # .deb, .rpm and tarball in dist/
-    scripts/package_windows.sh           # the zip, with a Windows madc
-    scripts/package_macos.sh             # the tarball, on a Mac
-    scripts/check_install.sh <prefix>    # an installed Chthonia, checked
+   ```c
+   #include <stdio.h>
 
-## Licence
+   int main(void)
+   {
+       printf("Hello!\n");
+       return 0;
+   }
+   ```
 
-Mozilla Public License 2.0 (`LICENSE`).
+3. **File ▸ Save** it as `hello.c`.
+4. Press **F5**. `Hello!` appears in the REPL.
+
+Then try the REPL: click in it, type `2 + 2` and press Enter.
+
+More in [Getting started](docs/getting-started.md).
+
+## Documentation
+
+- [Installing Chthonia](docs/install.md)
+- [Getting started](docs/getting-started.md): a tour of the window
+- [The REPL](docs/repl.md)
+- [Keyboard shortcuts](docs/keyboard.md)
+- [Building Chthonia from source](docs/building.md), for contributors
+
+## License
+
+Chthonia is free software under the
+[Mozilla Public License 2.0](LICENSE).

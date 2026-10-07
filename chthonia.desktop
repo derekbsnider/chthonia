@@ -2,7 +2,7 @@
 Type=Application
 Name=Chthonia
 GenericName=C and C++ IDE
-Comment=An easy window to learn C and C++: edit, run, and try code in the shell
+Comment=An easy window to learn C and C++: edit, run, and try code in the REPL
 Exec=chthonia %F
 Icon=chthonia
 Terminal=false
