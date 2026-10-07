@@ -103,9 +103,11 @@ jobs:
       - uses: actions/checkout@v7
       - name: madc, from its release's 22.04 .deb
         run: |
-          gh release download "$MADC_TAG" -R "$MADC_REPO" -p 'madc_*~ubuntu22.04_amd64.deb' -D "$RUNNER_TEMP"
+          # A release asset's name has '.' where the package file had '~'
+          # (GitHub's spelling), so the pattern names neither.
+          gh release download "$MADC_TAG" -R "$MADC_REPO" -p 'madc_*ubuntu22.04_amd64.deb' -D "$RUNNER_TEMP"
           sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "$RUNNER_TEMP"/madc_*~ubuntu22.04_amd64.deb xvfb
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "$RUNNER_TEMP"/madc_*ubuntu22.04_amd64.deb xvfb
           echo "MADC=/usr/bin/madc" >> "$GITHUB_ENV"
       - name: build
         run: bash scripts/build.sh
@@ -118,7 +120,7 @@ jobs:
       - name: installed — both packages unpacked into one root
         run: |
           root=$RUNNER_TEMP/root
-          dpkg-deb -x "$RUNNER_TEMP"/madc_*~ubuntu22.04_amd64.deb "$root"
+          dpkg-deb -x "$RUNNER_TEMP"/madc_*ubuntu22.04_amd64.deb "$root"
           dpkg-deb -x dist/chthonia_*~ubuntu22.04_amd64.deb "$root"
           bash scripts/check_install.sh "$root/usr" "$root/usr/lib/x86_64-linux-gnu"
       - uses: actions/upload-artifact@v7
@@ -223,6 +225,11 @@ jobs:
       - name: draft the release
         run: |
           cd dist
+          # GitHub stores '~' in an asset's name as '.': rename first, so
+          # SHA256SUMS names the files people download.
+          for f in chthonia*~*; do
+            [ -e "$f" ] && mv "$f" "${f//\~/.}"
+          done
           sha256sum chthonia* > SHA256SUMS
           cat SHA256SUMS
           gh release create "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --draft \

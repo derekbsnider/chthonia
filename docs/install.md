@@ -10,8 +10,8 @@ Download both from their releases pages:
 
 ## Ubuntu (24.04 and 22.04, including WSL)
 
-Each Ubuntu version has its own packages. Their names end in
-`~ubuntu24.04` or `~ubuntu22.04`; pick the one that matches your system
+Each Ubuntu version has its own packages. Their names include
+`ubuntu24.04` or `ubuntu22.04`; pick the one that matches your system
 (`lsb_release -r` tells you which you have).
 
 1. Download madc's `.deb` and Chthonia's `.deb` into one folder.
