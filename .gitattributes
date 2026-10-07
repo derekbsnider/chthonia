@@ -4,5 +4,9 @@
 * text=auto eol=lf
 *.ico binary
 
-# GitHub's language statistics: madc's .mad source is a C++ dialect.
+# GitHub's language statistics: Chthonia's code is C++ (its .mad source is
+# a C++ dialect, and the header it includes); scripts/ is the build, test
+# and packaging tooling, not counted.
 *.mad linguist-language=C++
+*.h linguist-language=C++
+scripts/** linguist-detectable=false
