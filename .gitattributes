@@ -3,6 +3,7 @@
 # becomes part of the value.
 * text=auto eol=lf
 *.ico binary
+*.png binary
 
 # GitHub's language statistics: Chthonia's code is C++ (its .mad source is
 # a C++ dialect, and the header it includes); scripts/ is the build, test

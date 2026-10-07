@@ -7,7 +7,7 @@ at the top, press **F5**, and see what it prints at the bottom. Or skip the
 program entirely: type one line of C into the REPL and see its value right
 away.
 
-<!-- A screenshot goes here: docs/images/chthonia.png -->
+![Chthonia: hello.cpp in the editor, run from the REPL below it, with the Symbols view on the right](docs/images/chthonia.png)
 
 Everything it needs comes in one download: there is no separate compiler
 to install and nothing to configure.
