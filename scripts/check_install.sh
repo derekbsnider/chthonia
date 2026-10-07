@@ -11,6 +11,9 @@
 #   SYSTEM  where its desktop entry and icons are (default PREFIX; /usr, or
 #           a package root's usr/, for a .deb or .rpm)
 #
+# The controls move installed directories aside, so run it as their owner:
+# under sudo for an installed .deb or .rpm.
+#
 # Each probe runs from a directory of its own with no user configuration
 # and no library path, and each control must fail:
 #   0. the installation carries its madc: bin/madc runs, and on Linux
@@ -63,7 +66,12 @@ run_in() {
 		"$chthonia" "$@") 2>&1
 }
 run() { run_in "$work" "$@"; }
-hide() { hidden=$1; mv "$1" "$1.hidden"; }
+# hide DIR — DIR moved aside for a control; an installed package's
+# directories are root's, so a control there runs as root.
+hide() {
+	mv "$1" "$1.hidden" 2> /dev/null || fail "cannot move $1 aside for its control (run as its owner: sudo for an installed package)"
+	hidden=$1
+}
 unhide() { mv "$hidden.hidden" "$hidden"; hidden=; }
 [ -x "$chthonia" ] || fail "no executable $chthonia"
 [ -f "$bundle/chthonia.plugin" ] || fail "no bundle in $bundle"

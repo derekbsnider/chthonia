@@ -96,7 +96,7 @@ jobs:
         run: |
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=1
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ./dist/chthonia_*ubuntu24.04_amd64.deb
-          bash scripts/check_install.sh /usr/lib/chthonia /usr
+          sudo bash scripts/check_install.sh /usr/lib/chthonia /usr
           xvfb-run -a bash scripts/check_apparmor.sh
       - uses: actions/upload-artifact@v7
         with:
@@ -139,7 +139,7 @@ jobs:
         run: |
           sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y -qq madc
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ./dist/chthonia_*ubuntu22.04_amd64.deb
-          bash scripts/check_install.sh /usr/lib/chthonia /usr
+          sudo bash scripts/check_install.sh /usr/lib/chthonia /usr
       - uses: actions/upload-artifact@v7
         with:
           name: linux-jammy
