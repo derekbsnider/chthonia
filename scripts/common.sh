@@ -9,6 +9,11 @@
 #           bundle), both absolute, or says why it cannot
 #   madcide_cmd
 #           the madcide beside madc, as a command (MADCIDE overrides)
+#   madc_paired
+#           MADC_PACKAGE, the madc release package Chthonia's packages carry,
+#           checked to be the madc that builds them (madc_pkg, madc_ver)
+#   madc_unpack PACKAGE ROOT
+#           a madc release package unpacked into ROOT, madc's folder layout
 #   refresh_sums DIST FILE...
 #           DIST/SHA256SUMS's lines for the packages just made
 #   plain_modes DIR
@@ -109,6 +114,65 @@ refresh_sums() {
 			shasum -a 256 "$@" >> SHA256SUMS
 		fi
 	)
+}
+
+# madc_paired — MADC_PACKAGE, the madc release package every Chthonia
+# package carries (its .zip, .tar.gz or .deb), as madc_pkg (absolute), and
+# its version as madc_ver: the release of the madc that builds Chthonia,
+# since chthonia links the libraries it ships with.
+madc_paired() {
+	madc_pkg=${MADC_PACKAGE:-}
+	if [ -z "$madc_pkg" ] || [ ! -f "$madc_pkg" ]; then
+		echo "$(basename "$0"): MADC_PACKAGE names no madc release package ('$madc_pkg'): Chthonia's packages carry madc" >&2
+		return 1
+	fi
+	madc_pkg=$(cd "$(dirname "$madc_pkg")" && pwd)/$(basename "$madc_pkg")
+	# shellcheck disable=SC2086
+	madc_ver=$($madc --version | sed -n 's/^madc \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' | head -1)
+	local pv
+	pv=$(basename "$madc_pkg" | sed -n 's/^madc[-_]\([0-9]*\.[0-9]*\.[0-9]*\)[-_.].*/\1/p')
+	if [ -z "$madc_ver" ] || [ "$pv" != "$madc_ver" ]; then
+		echo "$(basename "$0"): MADC_PACKAGE is madc '$pv', the madc building Chthonia ($madc) is '$madc_ver'" >&2
+		return 1
+	fi
+}
+
+# madc_unpack PACKAGE ROOT — a madc release package unpacked into ROOT in
+# madc's folder layout (bin/, lib/, share/, its notices), the layout its
+# zip and tarballs have. A .deb's usr/ is that layout but for its libraries
+# in the system's multiarch directory (usr/lib/<triplet>/): they move up to
+# lib/, where madc's programs look for them ($ORIGIN/../lib).
+madc_unpack() {
+	local pkg=$1 root=$2 t top d
+	t=$(mktemp -d)
+	case "$pkg" in
+	*.zip) unzip -q "$pkg" -d "$t/x" ;;
+	*.tar.gz) mkdir "$t/x" && tar -xzf "$pkg" -C "$t/x" ;;
+	*.deb) dpkg-deb -x "$pkg" "$t/deb" ;;
+	*) echo "madc_unpack: $pkg is not a madc release package (.zip, .tar.gz, .deb)" >&2
+	   rm -rf "$t"; return 1 ;;
+	esac
+	mkdir -p "$root"
+	if [ -d "$t/deb" ]; then
+		cp -R "$t/deb/usr/." "$root/"
+		for d in "$root"/lib/*-linux-gnu; do
+			[ -d "$d" ] || continue
+			mv "$d"/* "$root/lib/"
+			rmdir "$d"
+		done
+	else
+		top=$(ls -A "$t/x")
+		if [ "$(printf '%s\n' "$top" | wc -l | tr -d ' ')" != 1 ] || [ ! -d "$t/x/$top" ]; then
+			echo "madc_unpack: $pkg does not hold one folder" >&2
+			rm -rf "$t"; return 1
+		fi
+		cp -R "$t/x/$top/." "$root/"
+	fi
+	rm -rf "$t"
+	if [ ! -f "$root/bin/madc$exe" ]; then
+		echo "madc_unpack: $pkg holds no bin/madc$exe" >&2
+		return 1
+	fi
 }
 
 # plain_modes DIR — directories 0755 (a setgid bit inherited from the

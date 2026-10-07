@@ -1,17 +1,20 @@
 #!/bin/bash
-# check_install.sh — Chthonia installed into a madc installation, run as a
-# user runs it (Linux, macOS).
+# check_install.sh — Chthonia installed, standing alone, run as a user runs
+# it (Linux, macOS, Windows).
 #
-#   scripts/check_install.sh PREFIX [LIBDIR]
+#   scripts/check_install.sh PREFIX [SYSTEM]
 #
-#   PREFIX  the installation: a madc folder (madc's tarball) Chthonia's
-#           tarball was unpacked into, or a package root's usr/
-#   LIBDIR  madc's libraries, when the loader would not find them (packages
-#           unpacked rather than installed); a madc folder needs none, its
-#           programs find ../lib themselves
+#   PREFIX  the installation: the folder holding bin/chthonia — a tarball's
+#           or the zip's folder, or /usr/lib/chthonia where a .deb or .rpm
+#           installs it. madcide's data is under share/madcide, or beside
+#           the programs in bin\ on Windows (bin/chthonia.exe).
+#   SYSTEM  where its desktop entry and icons are (default PREFIX; /usr, or
+#           a package root's usr/, for a .deb or .rpm)
 #
-# Each probe runs from a directory of its own with no user configuration,
-# and each control must fail:
+# Each probe runs from a directory of its own with no user configuration
+# and no library path, and each control must fail:
+#   0. the installation carries its madc: bin/madc runs, and on Linux
+#      chthonia loads libmadc from PREFIX/lib;
 #   1. chthonia prints its usage line;
 #   2. `-c check` over a C file that includes <stdio.h> is clean: madc's
 #      installed headers and engine serve it [control: a syntax error is 1
@@ -27,17 +30,20 @@
 set -u
 . "$(dirname "$0")/common.sh"
 if [ $# -lt 1 ] || [ ! -d "$1" ]; then
-	echo "usage: $0 PREFIX [LIBDIR]" >&2
+	echo "usage: $0 PREFIX [SYSTEM]" >&2
 	exit 2
 fi
 prefix=$(cd "$1" && pwd)
-chthonia=$prefix/bin/chthonia
-bundle=$prefix/share/madcide/plugins/chthonia
-profiles=$prefix/share/madcide/profiles
-case "$(uname -s)" in
-Darwin) libvar=DYLD_LIBRARY_PATH ;;
-*) libvar=LD_LIBRARY_PATH ;;
-esac
+system=$(cd "${2:-$1}" && pwd)
+if [ -f "$prefix/bin/chthonia.exe" ]; then
+	sfx=.exe data=$prefix/bin linux=0
+else
+	sfx= data=$prefix/share/madcide linux=1
+	[ "$(uname -s)" = Darwin ] && linux=0
+fi
+chthonia=$prefix/bin/chthonia$sfx
+bundle=$data/plugins/chthonia
+profiles=$data/profiles
 work=$(mktemp -d)
 hidden=
 restore() {
@@ -52,18 +58,29 @@ fail() { echo "check_install: FAIL — $1" >&2; exit 1; }
 run_in() {
 	local d=$1
 	shift
-	local -a e=(env -u MADCIDE_PLUGIN_PATH "MADCIDE_CONFIG_DIR=$work/no-config")
-	[ -n "$LIBDIR" ] && e+=("$libvar=$LIBDIR")
-	(cd "$d" && capped 60 "${e[@]}" "$chthonia" "$@") 2>&1
+	(cd "$d" && capped 60 env -u MADCIDE_PLUGIN_PATH -u LD_LIBRARY_PATH \
+		-u DYLD_LIBRARY_PATH "MADCIDE_CONFIG_DIR=$work/no-config" \
+		"$chthonia" "$@") 2>&1
 }
 run() { run_in "$work" "$@"; }
 hide() { hidden=$1; mv "$1" "$1.hidden"; }
 unhide() { mv "$hidden.hidden" "$hidden"; hidden=; }
-LIBDIR=${2:-}
-[ -z "$LIBDIR" ] || LIBDIR=$(cd "$LIBDIR" && pwd)
-
 [ -x "$chthonia" ] || fail "no executable $chthonia"
 [ -f "$bundle/chthonia.plugin" ] || fail "no bundle in $bundle"
+
+# 0. its own madc
+out=$(cd "$work" && capped 60 env -u LD_LIBRARY_PATH -u DYLD_LIBRARY_PATH "$prefix/bin/madc$sfx" --version 2>&1)
+case "$out" in
+"madc "[0-9]*) ok "the installation carries its madc (${out%%$'\n'*})" ;;
+*) fail "no madc of its own in $prefix/bin (got: $out)" ;;
+esac
+if [ "$linux" = 1 ]; then
+	# ldd names it as found: <prefix>/bin/../lib/... through $ORIGIN.
+	lib=$(env -u LD_LIBRARY_PATH ldd "$chthonia" | awk '$1 == "libmadc.so.0" { print $3 }')
+	libdir=$(cd "$(dirname "${lib:-/nonexistent/x}")" 2>/dev/null && pwd)
+	[ "$libdir" = "$prefix/lib" ] || fail "chthonia loads libmadc from '$lib', not $prefix/lib"
+	ok "chthonia loads libmadc from its installation ($libdir)"
+fi
 
 # 1. usage
 out=$(run --help)
@@ -105,7 +122,7 @@ esac
 # A madc checkout's tools/madcide/ holds the default bundle and the key
 # styles, never Chthonia's: copies of the installed ones stand in for them.
 mkdir -p "$work/tree/tools/madcide/plugins"
-cp -R "$prefix/share/madcide/plugins/default" "$work/tree/tools/madcide/plugins/"
+cp -R "$data/plugins/default" "$work/tree/tools/madcide/plugins/"
 cp -R "$profiles" "$work/tree/tools/madcide/profiles"
 out=$(run_in "$work/tree" ../ok.c -c "menushow Help")
 case "$out" in
@@ -138,9 +155,9 @@ done
 ok "control: the profiles hidden, the Key bindings list names no style"
 
 # 5. the desktop entry and icon
-if [ "$(uname -s)" != Darwin ]; then
-	[ -f "$prefix/share/applications/chthonia.desktop" ] || fail "no share/applications/chthonia.desktop"
-	[ -f "$prefix/share/icons/hicolor/256x256/apps/chthonia.png" ] || fail "no share/icons/hicolor/256x256/apps/chthonia.png"
+if [ "$linux" = 1 ]; then
+	[ -f "$system/share/applications/chthonia.desktop" ] || fail "no $system/share/applications/chthonia.desktop"
+	[ -f "$system/share/icons/hicolor/256x256/apps/chthonia.png" ] || fail "no $system/share/icons/hicolor/256x256/apps/chthonia.png"
 	ok "the desktop entry and the 256 px icon are installed"
 fi
 echo "check_install: PASS ($prefix)"

@@ -1,6 +1,8 @@
-# ci.yml — Chthonia built, tested and packaged against an installed madc on
-# Linux, Windows and macOS: each job installs madc from a madc release's
-# assets, then runs Chthonia's own scripts (scripts/).
+# ci.yml — Chthonia built, tested and packaged on Linux, Windows and macOS:
+# each job takes madc from a madc release's assets, builds and tests
+# Chthonia with it, then packages Chthonia WITH that release (MADC_PACKAGE):
+# every package stands alone, one download, one installer. Each installed
+# check runs on Chthonia's package alone, no other madc present.
 #
 # The madc release is v<chthonia.json's "madc"> (the oldest madc that builds
 # Chthonia), or the dispatch's madc_tag. A draft release's assets read with
@@ -67,8 +69,8 @@ jobs:
           gh release download "$MADC_TAG" -R "$MADC_REPO" -p 'madc-*-linux-x86_64.tar.gz' -D "$RUNNER_TEMP"
           tar -xzf "$RUNNER_TEMP"/madc-*-linux-x86_64.tar.gz -C "$RUNNER_TEMP"
           folder=$(ls -d "$RUNNER_TEMP"/madc-*-linux-x86_64)
-          echo "MADC_FOLDER=$folder" >> "$GITHUB_ENV"
           echo "MADC=$folder/bin/madc" >> "$GITHUB_ENV"
+          echo "MADC_PACKAGE=$(ls "$RUNNER_TEMP"/madc-*-linux-x86_64.tar.gz)" >> "$GITHUB_ENV"
       - name: build
         run: bash scripts/build.sh
       - name: tests
@@ -83,18 +85,18 @@ jobs:
           xvfb-run -a bash scripts/run_tests.sh --gui
       - name: packages (.deb, .rpm, tarball)
         run: bash scripts/package_linux.sh
-      - name: installed — the tarball unpacked into the madc folder
+      - name: installed — the tarball alone
         run: |
-          tar -xzf dist/chthonia-*-linux-x86_64.tar.gz -C "$MADC_FOLDER"
-          bash scripts/check_install.sh "$MADC_FOLDER"
-      - name: installed — the .debs, the window under Ubuntu's AppArmor default
+          mkdir "$RUNNER_TEMP/alone"
+          tar -xzf dist/chthonia-*-linux-x86_64.tar.gz -C "$RUNNER_TEMP/alone"
+          bash scripts/check_install.sh "$(ls -d "$RUNNER_TEMP"/alone/chthonia-*-linux-x86_64)"
+      - name: installed — the .deb alone, its window under Ubuntu's AppArmor default
         # The restriction back on, as a 24.04 desktop has it: the installed
         # window comes up by the profile Chthonia's .deb carries.
         run: |
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=1
-          gh release download "$MADC_TAG" -R "$MADC_REPO" -p 'madc_*ubuntu24.04_amd64.deb' -D "$RUNNER_TEMP/debs"
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
-            "$RUNNER_TEMP"/debs/madc_*ubuntu24.04_amd64.deb ./dist/chthonia_*ubuntu24.04_amd64.deb
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ./dist/chthonia_*ubuntu24.04_amd64.deb
+          bash scripts/check_install.sh /usr/lib/chthonia /usr
           xvfb-run -a bash scripts/check_apparmor.sh
       - uses: actions/upload-artifact@v7
         with:
@@ -106,9 +108,9 @@ jobs:
           if-no-files-found: error
 
   linux-jammy:
-    # Ubuntu 22.04's .deb, built on 22.04 against madc's 22.04 .deb (one
-    # .deb per Ubuntu release, as madc's). Installed with apt for the build;
-    # checked as a package root, both packages unpacked into it.
+    # Ubuntu 22.04's .deb, built on 22.04 with madc's 22.04 .deb, which it
+    # carries (one .deb per Ubuntu release, as madc's). madc is installed
+    # with apt for the build, then removed: Chthonia's .deb installs alone.
     runs-on: ubuntu-22.04
     needs: madc
     env:
@@ -124,6 +126,7 @@ jobs:
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "$RUNNER_TEMP"/madc_*ubuntu22.04_amd64.deb xvfb
           echo "MADC=/usr/bin/madc" >> "$GITHUB_ENV"
+          echo "MADC_PACKAGE=$(ls "$RUNNER_TEMP"/madc_*ubuntu22.04_amd64.deb)" >> "$GITHUB_ENV"
       - name: build
         run: bash scripts/build.sh
       - name: tests
@@ -132,12 +135,11 @@ jobs:
         run: xvfb-run -a bash scripts/run_tests.sh --gui
       - name: package (.deb)
         run: bash scripts/package_linux.sh --deb
-      - name: installed — both packages unpacked into one root
+      - name: installed — the .deb alone, madc's removed
         run: |
-          root=$RUNNER_TEMP/root
-          dpkg-deb -x "$RUNNER_TEMP"/madc_*ubuntu22.04_amd64.deb "$root"
-          dpkg-deb -x dist/chthonia_*~ubuntu22.04_amd64.deb "$root"
-          bash scripts/check_install.sh "$root/usr" "$root/usr/lib/x86_64-linux-gnu"
+          sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y -qq madc
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ./dist/chthonia_*ubuntu22.04_amd64.deb
+          bash scripts/check_install.sh /usr/lib/chthonia /usr
       - uses: actions/upload-artifact@v7
         with:
           name: linux-jammy
@@ -163,12 +165,19 @@ jobs:
           gh release download "$MADC_TAG" -R "$MADC_REPO" -p 'madc-*-windows-x86_64.zip' -D "$tmp"
           unzip -q "$tmp"/madc-*-windows-x86_64.zip -d "$tmp"
           echo "MADC=$(ls -d "$tmp"/madc-*-windows-x86_64)/bin/madc.exe" >> "$GITHUB_ENV"
+          echo "MADC_PACKAGE=$(ls "$tmp"/madc-*-windows-x86_64.zip)" >> "$GITHUB_ENV"
       - name: build
         run: bash scripts/build.sh
       - name: tests
         run: bash scripts/run_tests.sh
       - name: package (zip)
         run: bash scripts/package_windows.sh
+      - name: installed — the zip alone
+        run: |
+          alone=$(cygpath -u "$RUNNER_TEMP")/alone
+          mkdir "$alone"
+          unzip -q dist/chthonia-*-windows-x86_64.zip -d "$alone"
+          bash scripts/check_install.sh "$(ls -d "$alone"/chthonia-*-windows-x86_64)"
       - uses: actions/upload-artifact@v7
         with:
           name: windows
@@ -198,18 +207,19 @@ jobs:
           gh release download "$MADC_TAG" -R "$MADC_REPO" -p "madc-*-macos-${{ matrix.arch }}.tar.gz" -D "$RUNNER_TEMP"
           tar -xzf "$RUNNER_TEMP"/madc-*-macos-${{ matrix.arch }}.tar.gz -C "$RUNNER_TEMP"
           folder=$(ls -d "$RUNNER_TEMP"/madc-*-macos-${{ matrix.arch }})
-          echo "MADC_FOLDER=$folder" >> "$GITHUB_ENV"
           echo "MADC=$folder/bin/madc" >> "$GITHUB_ENV"
+          echo "MADC_PACKAGE=$(ls "$RUNNER_TEMP"/madc-*-macos-${{ matrix.arch }}.tar.gz)" >> "$GITHUB_ENV"
       - name: build
         run: bash scripts/build.sh
       - name: tests
         run: bash scripts/run_tests.sh
       - name: package (tarball)
         run: bash scripts/package_macos.sh
-      - name: installed — the tarball unpacked into the madc folder
+      - name: installed — the tarball alone
         run: |
-          tar -xzf dist/chthonia-*-macos-*.tar.gz -C "$MADC_FOLDER"
-          bash scripts/check_install.sh "$MADC_FOLDER"
+          mkdir "$RUNNER_TEMP/alone"
+          tar -xzf dist/chthonia-*-macos-*.tar.gz -C "$RUNNER_TEMP/alone"
+          bash scripts/check_install.sh "$(ls -d "$RUNNER_TEMP"/alone/chthonia-*-macos-*)"
       - uses: actions/upload-artifact@v7
         with:
           name: macos-${{ matrix.arch }}

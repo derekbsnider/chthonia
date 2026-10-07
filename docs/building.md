@@ -5,9 +5,10 @@ This page is for people who want to change Chthonia. To use it, see
 
 ## What you need
 
-- madc 0.102.0 or newer, installed (see [Installing](install.md)). madc is
-  the compiler that builds Chthonia, and its IDE library, madcide, is what
-  Chthonia is built on.
+- madc 0.102.0 or newer, from
+  [madc's releases page](https://github.com/derekbsnider/madc/releases).
+  madc is the compiler that builds Chthonia, and its IDE library, madcide,
+  is what Chthonia is built on.
 - `bash`, and on Linux `xvfb-run` for the window tests.
 
 The scripts use the `madc` on your `PATH`. To use another one, set
@@ -47,8 +48,12 @@ scripts/package_macos.sh           # the macOS .tar.gz (run on a Mac)
 scripts/check_install.sh <prefix>  # checks an installed Chthonia
 ```
 
-Each package is built against the madc that builds it and requires that
-version or newer.
+Every package carries madc, so a user installs one thing. Set
+`MADC_PACKAGE` to the madc release package of the madc that builds
+Chthonia, the one for the same platform: its `.zip` for Windows, its
+`.tar.gz` for macOS and Linux, or for `package_linux.sh --deb` its `.deb`
+for that Ubuntu release. The packager checks that its version is that
+madc's.
 
 ## Releases
 

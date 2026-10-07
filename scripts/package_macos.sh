@@ -1,12 +1,16 @@
 #!/bin/bash
-# package_macos.sh — Chthonia's macOS tarball, for a madc folder:
+# package_macos.sh — Chthonia's macOS tarball, standing alone:
 #
-#   chthonia-<ver>-macos-<arch>.tar.gz   unpacks into the madc folder (madc's
-#                                        tarball's): tar -xzf … -C <madc folder>
+#   chthonia-<ver>-macos-<arch>.tar.gz   one folder, chthonia-<ver>-macos-
+#                                        <arch>/: the madc release it is paired
+#                                        with (madc's tarball) and Chthonia in
+#                                        it. Unpack it, run bin/chthonia.
 #
 #   scripts/package_macos.sh [-o DIST]
 #
 #   MADC, MADCIDE_INCLUDE, MADCIDE   as build.sh and stage.sh
+#   MADC_PACKAGE                     that madc's release tarball, which the
+#                                    tarball carries
 #   -o DIST                          where the tarball goes (default dist/),
 #                                    its line in its SHA256SUMS
 #
@@ -28,21 +32,24 @@ if [ "$(uname -s)" != Darwin ]; then
 fi
 ver=$(sed -n 's/^#define CHTHONIA_VERSION "\(.*\)"$/\1/p' "$here/chthonia_version.h")
 [ -n "$ver" ] || { echo "package_macos.sh: no CHTHONIA_VERSION in chthonia_version.h" >&2; exit 1; }
+madc_paired || exit 1
 
 work=$here/tmp/package-macos
 rm -rf "$work"
 mkdir -p "$work" "$dist"
 dist=$(cd "$dist" && pwd)
 bash "$here/scripts/build.sh" -o "$work/chthonia"
-CHTHONIA="$work/chthonia" bash "$here/scripts/stage.sh" macos "$work/tar"
+folder=chthonia-$ver-macos-$(uname -m)
+madc_unpack "$madc_pkg" "$work/tar/$folder"
+CHTHONIA="$work/chthonia" bash "$here/scripts/stage.sh" macos "$work/tar/$folder"
 plain_modes "$work/tar"
-tgz=chthonia-$ver-macos-$(uname -m).tar.gz
-tar -C "$work/tar" -czf "$dist/$tgz" bin share
+tgz=$folder.tar.gz
+tar -C "$work/tar" -czf "$dist/$tgz" "$folder"
 if ! diff <(tar -tzf "$dist/$tgz" | grep -v '/$' | LC_ALL=C sort) \
-	  <(cd "$work/tar" && find . -type f | sed 's|^\./||' | LC_ALL=C sort) > "$work/diff"; then
+	  <(cd "$work/tar" && find . ! -type d | sed 's|^\./||' | LC_ALL=C sort) > "$work/diff"; then
 	echo "package_macos.sh: $tgz does not hold exactly the staged files:" >&2
 	cat "$work/diff" >&2
 	exit 1
 fi
 refresh_sums "$dist" "$tgz"
-echo "package_macos.sh: $dist/$tgz"
+echo "package_macos.sh: $dist/$tgz (madc $madc_ver)"

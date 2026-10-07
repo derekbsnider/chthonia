@@ -9,12 +9,12 @@ away.
 
 <!-- A screenshot goes here: docs/images/chthonia.png -->
 
-Chthonia runs on [madc](https://github.com/derekbsnider/madc), so there is
-no separate compiler to install and nothing to configure.
+Everything it needs comes in one download: there is no separate compiler
+to install and nothing to configure.
 
 ## What you can do
 
-- **Write** C, C++ or madc in an editor with syntax colours, find and
+- **Write** C or C++ in an editor with syntax colours, find and
   replace, undo, and tabs for your open files.
 - **Try things out** in the REPL, a *Read–eval–print loop*: type
   `int x = 6 * 7;`, then `x + 1`, and it prints `43`.
@@ -29,18 +29,18 @@ no separate compiler to install and nothing to configure.
 
 ## Install
 
-Install madc first, then Chthonia. Chthonia needs madc 0.102.0 or newer.
+One download, one install: each package has everything Chthonia needs.
 
 | Your computer | Download | Then |
 |:--|:--|:--|
-| Ubuntu 24.04 or 22.04 (also in WSL) | madc's and Chthonia's `.deb` for your Ubuntu version | `sudo apt install ./madc_*.deb ./chthonia_*.deb` |
-| Windows 10 or 11 | madc's and Chthonia's `.zip` | Unzip madc, unzip Chthonia into the madc folder, run `bin\chthonia.exe` |
-| macOS (Apple silicon or Intel) | madc's and Chthonia's `.tar.gz` for your Mac | Unpack madc, unpack Chthonia into the madc folder, run `bin/chthonia` |
+| Ubuntu 24.04 or 22.04 (also in WSL) | Chthonia's `.deb` for your Ubuntu version | `sudo apt install ./chthonia_*.deb` |
+| Fedora | Chthonia's `.rpm` | `sudo dnf install ./chthonia-*.rpm` |
+| Windows 10 or 11 | Chthonia's `.zip` | Unzip it, run `bin\chthonia.exe` in its folder |
+| macOS (Apple silicon or Intel) | Chthonia's `.tar.gz` for your Mac | Unpack it, run `bin/chthonia` in its folder |
 
-Chthonia's packages are on its
-[releases page](https://github.com/derekbsnider/chthonia/releases); madc's
-are on [madc's](https://github.com/derekbsnider/madc/releases). Step-by-step
-instructions: [Installing Chthonia](docs/install.md).
+Download from the
+[releases page](https://github.com/derekbsnider/chthonia/releases).
+Step-by-step instructions: [Installing Chthonia](docs/install.md).
 
 ## Your first program
 
@@ -70,7 +70,8 @@ More in [Getting started](docs/getting-started.md).
 - [Getting started](docs/getting-started.md): a tour of the window
 - [The REPL](docs/repl.md)
 - [Keyboard shortcuts](docs/keyboard.md)
-- [Building Chthonia from source](docs/building.md), for contributors
+- [Building Chthonia from source](docs/building.md), for contributors: it
+  is built with [madc](https://github.com/derekbsnider/madc)
 
 ## License
 
