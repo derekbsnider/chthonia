@@ -74,7 +74,13 @@ jobs:
       - name: tests
         run: bash scripts/run_tests.sh
       - name: window tests
-        run: xvfb-run -a bash scripts/run_tests.sh --gui
+        # Ubuntu 24.04's AppArmor denies an unprofiled program's user
+        # namespaces, which WebKit's bwrap sandbox needs (LP: #2046844).
+        # The test window runs under the tarball's madc, which no profile
+        # names, so the runner lifts the restriction for it.
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          xvfb-run -a bash scripts/run_tests.sh --gui
       - name: packages (.deb, .rpm, tarball)
         run: bash scripts/package_linux.sh
       - name: installed — the tarball unpacked into the madc folder

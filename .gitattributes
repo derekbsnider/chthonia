@@ -1,0 +1,5 @@
+# LF on every checkout, Windows included: the scripts, the test fixtures
+# and the bundle files are read line by line, and a CR at a line's end
+# becomes part of the value.
+* text=auto eol=lf
+*.ico binary
