@@ -42,7 +42,7 @@ Edit find Find…
 Edit replace Replace… [editable]
 Edit gotoline Go to line…
 Edit -
-Edit replclear Clear shell
+Edit replclear Clear REPL
 
 Run replrun Run
 Run replstop Stop
@@ -52,7 +52,7 @@ Run language Language…
 
 Build build Build…
 
-View repl Shell
+View repl REPL
 View symbols Symbols
 View problems Problems
 View output Output

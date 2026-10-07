@@ -15,7 +15,7 @@
 
 3. **File ▸ Save** names the file. Its extension (`.c`, `.cpp`, `.mad`)
    says which language it is in.
-4. **Run ▸ Run** runs it. What it prints appears in the shell, below the
+4. **Run ▸ Run** runs it. What it prints appears in the REPL, below the
    editor.
 
 Next: [Running a program](running.md).

@@ -39,7 +39,7 @@
 //  10. View ▸ Outline and Tools ▸ Options: the View and
 //      Tools menus list them; outline shows in the sidebar beside Symbols
 //      (the file's main) and toggles back; options opens and closes its pane.
-//  11. Edit ▸ Clear shell (`replclear`, Ctrl+L), in pins 8-9's session: the
+//  11. Edit ▸ Clear REPL (`replclear`, Ctrl+L), in pins 8-9's session: the
 //      transcript had text and is empty; the session is live and the
 //      Symbols rows stay.
 //  12. Projects and building: File lists Project…, Open Project… and Add
@@ -174,7 +174,7 @@ void symbols_gate(IdeSession &S, long doc, const char *label)
     enter_line(S, doc, w, es, "int y = 7;");
     symbols_rows(got, S, doc);
     println("{}-entry: [{}]", label, got);
-    // Edit ▸ Clear shell (`replclear`, Ctrl+L): the transcript
+    // Edit ▸ Clear REPL (`replclear`, Ctrl+L): the transcript
     // empties, the session and its names stay.
     var tbefore;
     ui::text(tbefore, w, repl_doc_if_any(w, es));

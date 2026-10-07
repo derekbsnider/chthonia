@@ -5,7 +5,7 @@ madc.
 
 - [Getting started](getting-started.md)
 - [Running a program](running.md)
-- [The shell](shell.md)
+- [The REPL](repl.md)
 - [Finding problems](problems.md)
 - [Menus and commands](menus)
 

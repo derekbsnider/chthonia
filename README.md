@@ -1,9 +1,9 @@
 # Chthonia
 
-An easy IDE to learn C and C++ in: the editor, a C shell below it (a REPL)
-and the Symbols view beside it, with Run (F5) and Stop on the toolbar. Type a
-line of C in the shell and see its value; run the whole file and see its
-output; the Symbols view lists what the shell's session holds.
+An easy IDE to learn C and C++ in: the editor, a C REPL (a Read–eval–print loop)
+below it and the Symbols view beside it, with Run (F5) and Stop on the
+toolbar. Type a line of C in the REPL and see its value; run the whole file
+and see its output; the Symbols view lists what the REPL's session holds.
 
 Chthonia is built on madcide, the IDE that comes with
 [madc](https://github.com/derekbsnider/madc), and runs on madc's engine:
