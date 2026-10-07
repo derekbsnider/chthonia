@@ -87,6 +87,15 @@ jobs:
         run: |
           tar -xzf dist/chthonia-*-linux-x86_64.tar.gz -C "$MADC_FOLDER"
           bash scripts/check_install.sh "$MADC_FOLDER"
+      - name: installed — the .debs, the window under Ubuntu's AppArmor default
+        # The restriction back on, as a 24.04 desktop has it: the installed
+        # window comes up by the profile Chthonia's .deb carries.
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=1
+          gh release download "$MADC_TAG" -R "$MADC_REPO" -p 'madc_*ubuntu24.04_amd64.deb' -D "$RUNNER_TEMP/debs"
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            "$RUNNER_TEMP"/debs/madc_*ubuntu24.04_amd64.deb ./dist/chthonia_*ubuntu24.04_amd64.deb
+          xvfb-run -a bash scripts/check_apparmor.sh
       - uses: actions/upload-artifact@v7
         with:
           name: linux

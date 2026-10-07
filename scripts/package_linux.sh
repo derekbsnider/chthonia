@@ -40,8 +40,17 @@ done
 ver=$(sed -n 's/^#define CHTHONIA_VERSION "\(.*\)"$/\1/p' "$here/chthonia_version.h")
 rel=${PKG_RELEASE:-1}
 debrel=$rel
+apparmor=0
 if [ "$( (. /etc/os-release 2>/dev/null; echo "${ID:-}") )" = ubuntu ]; then
-	debrel="$rel~ubuntu$( (. /etc/os-release; echo "$VERSION_ID") )"
+	osver=$( (. /etc/os-release; echo "$VERSION_ID") )
+	debrel="$rel~ubuntu$osver"
+	# Ubuntu 24.04 and later deny an unprofiled program the user
+	# namespaces the window's WebKit sandbox (bwrap) needs, and the
+	# window dies at its first page (LP: #2046844). There the .deb
+	# carries an AppArmor profile naming /usr/bin/chthonia.
+	if dpkg --compare-versions "$osver" ge 24.04; then
+		apparmor=1
+	fi
 fi
 # shellcheck disable=SC2086
 mver=$($madc --version | sed -n 's/^madc \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' | head -1)
@@ -57,9 +66,9 @@ esac
 maint="Derek Snider <coding@psychedeliccanada.ca>"
 home=$(sed -n 's/^#define CHTHONIA_HOME_PAGE "\(.*\)"$/\1/p' "$here/chthonia_version.h")
 summary="An easy IDE to learn C and C++"
-desc="Chthonia is a window to learn C and C++ in: the editor, a C shell
-below it (a REPL) and the Symbols view beside it, Run and Stop on the
-toolbar. It is built on madc's IDE, madcide, and runs on madc's engine."
+desc="Chthonia is a window to learn C and C++ in: the editor, the REPL
+below it to try code in, and the Symbols view beside it, Run and Stop on
+the toolbar. It is built on madc's IDE, madcide, and runs on madc's engine."
 
 work=$here/tmp/package-linux
 rm -rf "$work"
@@ -121,11 +130,48 @@ Homepage: $home
 Description: $summary
 $(printf '%s\n' "$desc" | sed 's/^/ /')
 EOF
+if [ "$apparmor" = 1 ]; then
+	# The shape of Ubuntu's own profiles for its WebKit programs
+	# (epiphany, devhelp): unconfined, with user namespaces. postinst
+	# loads it as dh_apparmor's snippet does.
+	mkdir -p "$debroot/etc/apparmor.d"
+	cat > "$debroot/etc/apparmor.d/chthonia" << 'EOF'
+# Chthonia's window is WebKitGTK, whose sandbox (bwrap) needs user
+# namespaces. This profile allows everything else, as before; it only
+# names the program so AppArmor grants them.
+
+abi <abi/4.0>,
+include <tunables/global>
+
+profile chthonia /usr/bin/chthonia flags=(unconfined) {
+  userns,
+
+  # Site-specific additions and overrides. See local/README for details.
+  include if exists <local/chthonia>
+}
+EOF
+	echo /etc/apparmor.d/chthonia > "$debroot/DEBIAN/conffiles"
+	cat > "$debroot/DEBIAN/postinst" << 'EOF'
+#!/bin/sh
+set -e
+if [ "$1" = configure ] && aa-enabled --quiet 2>/dev/null; then
+	apparmor_parser -r -T -W /etc/apparmor.d/chthonia || true
+fi
+EOF
+	chmod 0755 "$debroot/DEBIAN/postinst"
+fi
 plain_modes "$debroot"
 deb=chthonia_$ver-${debrel}_$deb_arch.deb
 dpkg-deb --build --root-owner-group "$debroot" "$dist/$deb" > /dev/null
-check "$deb" "$(dpkg-deb -c "$dist/$deb" | awk '$1 !~ /^d/ { print $6 }' | sed 's|^\./usr/||')" "$debroot/usr"
+check "$deb" "$(dpkg-deb -c "$dist/$deb" | awk '$1 !~ /^d/ { print $6 }' | sed -n 's|^\./usr/||p')" "$debroot/usr"
 check_modes "$deb" "$(dpkg-deb -c "$dist/$deb")"
+etc=$(dpkg-deb -c "$dist/$deb" | awk '$1 !~ /^d/ { print $6 }' | grep -v '^\./usr/' || true)
+want=
+[ "$apparmor" = 1 ] && want=./etc/apparmor.d/chthonia
+if [ "$etc" != "$want" ]; then
+	echo "package_linux.sh: $deb installs '$etc' outside /usr, not '$want'" >&2
+	exit 1
+fi
 if [ "$deb_only" = 1 ]; then
 	refresh_sums "$dist" "$deb"
 	echo "package_linux.sh: $dist/$deb (madc >= $mver)"
