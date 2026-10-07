@@ -47,6 +47,8 @@
 //      Build… followed by the build rows (Check, Build, Run, Stop); its Build
 //      row, run in this bundle, builds the file into an executable (the
 //      file's name without its extension), which the test then removes.
+//  13. Help ▸ Help Contents opens Help as a tab of the editor, current, not
+//      in the sidebar; File ▸ Close on it returns the editor to the file.
 #include <madcide/harness>
 
 // The menu bar's titles, space-separated, and the named menu's command ids.
@@ -249,6 +251,21 @@ int main()
 	    view_shown(S.w, S.es, viewOUTLINE) ? 0 : 1,
 	    side2 != viewNONE && side2 != viewOUTLINE ? 1 : 0,
 	    optshown, cur_pane(S.w, S.es) == paneNONE ? 1 : 0);
+    // 13. Help ▸ Help Contents: Help opens as a tab of the editor (the
+    //     layout's editor pane lists the help view) and is current; the
+    //     sidebar does not show it; File ▸ Close on the Help tab hands the
+    //     editor the file again, as the later pins expect.
+    bool hc = true;
+    S.command(doc, cmd_of_w(S.w, "helpcontents"), "", hc);
+    long hdoc = help_doc_if_any(S.w, S.es);
+    long hcur = S.active(doc);
+    long hside = view_shown(S.w, S.es, viewHELP) ? 1 : 0;
+    var he;
+    ev_action(he, "close", "");
+    S.apply_ide_event(hcur, he);
+    println("chthonia-help: tab={} current={} sidebar-help={} closed-to-file={}",
+	    hdoc != 0 ? 1 : 0, hdoc != 0 && hcur == hdoc ? 1 : 0, hside,
+	    S.active(doc) == doc && help_doc_if_any(S.w, S.es) == 0 ? 1 : 0);
     var tbr;
     toolbar_rows(tbr, S, doc);
     println("chthonia-toolbar: {}", tbr);
