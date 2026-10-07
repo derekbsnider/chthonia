@@ -15,7 +15,9 @@
 # libmadcide. It passes when it exits 0 and every non-empty line of its
 # NAME.expect appears in its standard output. Beside it, NAME.env holds
 # NAME=value words for its environment and NAME.timeout its limit in seconds
-# (default 120, wall clock and CPU). The tests run from Chthonia's top
+# (default 120, wall clock and CPU). NAME.win64_skip, NAME.darwin_skip or
+# NAME.linux_skip skips it on madc's platform, its one line saying why
+# (madc's fixture convention). The tests run from Chthonia's top
 # directory, and what they create goes under tmp/. Chthonia's bundle is found
 # where it is, not installed: its directory's parent is MADCIDE_PLUGIN_PATH,
 # which madcide searches after the user's plugins and before its shipped
@@ -33,6 +35,15 @@ export MADCIDE_PLUGIN_PATH
 cd "$here" || exit 1
 mkdir -p tmp
 
+# madc's platform, as the skip fixtures name it.
+if [ -n "$exe" ]; then
+	platform=win64
+elif [ "$(uname -s)" = Darwin ]; then
+	platform=darwin
+else
+	platform=linux
+fi
+
 names=("$@")
 if [ ${#names[@]} -eq 0 ]; then
 	for t in "$dir"/*.mad; do
@@ -41,8 +52,14 @@ if [ ${#names[@]} -eq 0 ]; then
 fi
 pass=0
 fail=0
+skip=0
 for name in ${names[@]+"${names[@]}"}; do
 	t=$dir/$name.mad
+	if [ -f "$dir/$name.${platform}_skip" ]; then
+		skip=$((skip + 1))
+		echo "SKIP $name ($(head -n 1 "$dir/$name.${platform}_skip"))"
+		continue
+	fi
 	envs=()
 	if [ -f "$dir/$name.env" ]; then
 		read -r -a envs < "$dir/$name.env"
@@ -74,5 +91,5 @@ for name in ${names[@]+"${names[@]}"}; do
 	fi
 done
 rm -f tmp/run_tests.err
-echo "$pass passed, $fail failed"
+echo "$pass passed, $fail failed, $skip skipped"
 [ $fail -eq 0 ]

@@ -1,0 +1,1 @@
+the host transport forks a child; Windows has no fork, so the bundle's code runs in madcide's process there
