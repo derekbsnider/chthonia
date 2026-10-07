@@ -3,3 +3,6 @@
 # becomes part of the value.
 * text=auto eol=lf
 *.ico binary
+
+# GitHub's language statistics: madc's .mad source is a C++ dialect.
+*.mad linguist-language=C++
