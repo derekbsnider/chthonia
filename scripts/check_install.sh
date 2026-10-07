@@ -18,7 +18,9 @@
 #      problem, exit status 1];
 #   3. its bundle is the installed one: its menu bar has no Window menu
 #      [control: the bundle hidden, chthonia runs the default profile, whose
-#      Window menu is listed];
+#      Window menu is listed]; so it is when started inside a madc source
+#      tree (a tools/madcide/ with plugins and profiles of its own): an
+#      installed program reads its installation's data;
 #   4. Tools ▸ Key bindings… is on its Tools menu and lists madcide's six key
 #      styles [control: madcide's profiles hidden, it lists none];
 #   5. on Linux, its desktop entry and its 256 px icon are installed.
@@ -45,12 +47,16 @@ restore() {
 trap restore EXIT
 ok() { echo "check_install: ok — $1"; }
 fail() { echo "check_install: FAIL — $1" >&2; exit 1; }
-# run ARG... — chthonia from $work, no user configuration; output and status.
-run() {
+# run_in DIR ARG... — chthonia from DIR, no user configuration; output and
+# status. run ARG... — the same from $work.
+run_in() {
+	local d=$1
+	shift
 	local -a e=(env -u MADCIDE_PLUGIN_PATH "MADCIDE_CONFIG_DIR=$work/no-config")
 	[ -n "$LIBDIR" ] && e+=("$libvar=$LIBDIR")
-	(cd "$work" && capped 60 "${e[@]}" "$chthonia" "$@") 2>&1
+	(cd "$d" && capped 60 "${e[@]}" "$chthonia" "$@") 2>&1
 }
+run() { run_in "$work" "$@"; }
 hide() { hidden=$1; mv "$1" "$1.hidden"; }
 unhide() { mv "$hidden.hidden" "$hidden"; hidden=; }
 LIBDIR=${2:-}
@@ -95,6 +101,16 @@ case "$out" in
 *"No menu 'Window'."*) fail "control broken: the bundle hidden, the menu bar still has no Window menu" ;;
 *"Split Window"*) ok "control: the bundle hidden, the default profile's Window menu is listed" ;;
 *) fail "control broken: the bundle hidden, no Window menu either (got: $out)" ;;
+esac
+# A madc checkout's tools/madcide/ holds the default bundle and the key
+# styles, never Chthonia's: copies of the installed ones stand in for them.
+mkdir -p "$work/tree/tools/madcide/plugins"
+cp -R "$prefix/share/madcide/plugins/default" "$work/tree/tools/madcide/plugins/"
+cp -R "$profiles" "$work/tree/tools/madcide/profiles"
+out=$(run_in "$work/tree" ../ok.c -c "menushow Help")
+case "$out" in
+*"About Chthonia"*) ok "started inside a madc source tree, the bundle is still the installed one" ;;
+*) fail "started inside a madc source tree, Help has no About Chthonia: not the installed bundle (got: $out)" ;;
 esac
 
 # 4. key styles
