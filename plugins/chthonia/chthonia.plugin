@@ -9,6 +9,7 @@
     "layout": "chthonia",
     "menu": "chthonia",
     "help": "chthonia",
+    "theme": "vscode",
     "settings": {
       "std": ""
     }

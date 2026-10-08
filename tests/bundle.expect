@@ -1,4 +1,5 @@
 chthonia-open: doc=1 bundle=chthonia keys=chthonia
+chthonia-theme: keyword=#569cd6 control=#c586c0 typename=#4ec9b0 bg=#1e1e1e
 chthonia-views: repl=1 problems-tab=0 outline=0 project=0 terminal=0 sidebar=1
 chthonia-menu: [File Edit Run Build View Tools Help] run=[replrun replstop replinterrupt repleof language]
 chthonia-repl: live=1 running=1
@@ -22,6 +23,7 @@ chthonia-build: built-msg=1 exe=1
 keystyle-reopen: keys=vscode
 default-open: bundle=default repl-shown=0 live=0 replh=0
 default-menu: [File Edit Search View Window Build Help]
+default-theme: keyword=bold
 default-toolbar: none
 keystyle-default: keys=joe
 symbols-lib: built=1 transport-library=1

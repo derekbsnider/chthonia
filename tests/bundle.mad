@@ -49,6 +49,10 @@
 //      file's name without its extension), which the test then removes.
 //  13. Help ▸ Help Contents opens Help as a tab of the editor, current, not
 //      in the sidebar; File ▸ Close on it returns the editor to the file.
+//  14. The colours are VS Code's Dark+ (madcide's shipped `vscode` scheme,
+//      the bundle's `theme`): keyword #569cd6, control #c586c0, a user's
+//      type #4ec9b0 on the #1e1e1e window; the default profile keeps JOE's
+//      look (keyword bold).
 #include <madcide/harness>
 
 // The menu bar's titles, space-separated, and the named menu's command ids.
@@ -209,6 +213,12 @@ int main()
     var k;
     ui::get(k, S.w, S.es, "profile");
     println("chthonia-open: doc={} bundle={} keys={}", doc > 0 ? 1 : 0, b, k);
+    var th;
+    ui::get(th, S.w, S.es, "theme");
+    var gth;
+    ui::get(gth, S.w, S.es, "gui_theme");
+    println("chthonia-theme: keyword={} control={} typename={} bg={}",
+	    th["keyword"], th["control"], th["typename"], gth["bg"]);
     println("chthonia-views: repl={} problems-tab={} outline={} project={} terminal={} sidebar={}",
 	    view_shown(S.w, S.es, repl_view(S.w)) ? 1 : 0,
 	    view_shown(S.w, S.es, viewPROBLEMS) ? 1 : 0,
@@ -380,6 +390,9 @@ int main()
 	    view_shown(D.w, D.es, repl_view(D.w)) ? 1 : 0, es_int(D.w, D.es, "repllive", 0),
 	    es_int(D.w, D.es, "replh", 0));
     println("default-menu: [{}]", titles);
+    var dth;
+    ui::get(dth, D.w, D.es, "theme");
+    println("default-theme: keyword={}", dth["keyword"]);
     toolbar_rows(tbr, D, D.active(0));
     println("default-toolbar: {}", tbr);
     ui::get(k, D.w, D.es, "profile");
