@@ -32,6 +32,11 @@ These are Chthonia's own keys. On a Mac, use **Cmd** where this page says
 | Ctrl+Left / Ctrl+Right | Move by a word |
 | Ctrl+Home / Ctrl+End | Go to the top / bottom |
 
+Enter starts the new line with the current line's indentation, one step
+deeper after a line that ends in `{` (or `:` in Python), and a `}` typed at
+the start of a line steps back one. **Edit ▸ Toggle Autoindent** turns this
+off or on again.
+
 ## Running
 
 | Keys | Does |

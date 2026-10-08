@@ -5,7 +5,7 @@ This page is for people who want to change Chthonia. To use it, see
 
 ## What you need
 
-- madc 0.102.0 or newer, from
+- madc 0.102.1 or newer, from
   [madc's releases page](https://github.com/derekbsnider/madc/releases).
   madc is the compiler that builds Chthonia, and its IDE library, madcide,
   is what Chthonia is built on.

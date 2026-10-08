@@ -35,7 +35,7 @@ To remove it: `sudo apt remove chthonia`.
 
 1. Download Chthonia's `.zip`.
 2. Unzip it where you want it to live, for example `C:\Chthonia`. It makes
-   a folder named like `chthonia-0.0.2-windows-x86_64`.
+   a folder named like `chthonia-0.0.3-windows-x86_64`.
 3. Run `bin\chthonia.exe` in that folder. To start it more easily next
    time, right-click it and choose **Pin to Start** or **Create shortcut**.
 
@@ -50,16 +50,16 @@ later), `x86_64` for Intel.
 2. In Terminal, unpack it:
 
    ```sh
-   tar -xzf chthonia-0.0.2-macos-arm64.tar.gz
+   tar -xzf chthonia-0.0.3-macos-arm64.tar.gz
    ```
 
-3. Run `chthonia-0.0.2-macos-arm64/bin/chthonia`.
+3. Run `chthonia-0.0.3-macos-arm64/bin/chthonia`.
 
 If macOS says the program "cannot be opened because the developer cannot be
 verified", clear the download mark once and try again:
 
 ```sh
-xattr -dr com.apple.quarantine chthonia-0.0.2-macos-arm64
+xattr -dr com.apple.quarantine chthonia-0.0.3-macos-arm64
 ```
 
 To remove it, delete the folder.
@@ -70,8 +70,8 @@ Chthonia also comes as a `.tar.gz` that works from any folder, no
 installation needed:
 
 ```sh
-tar -xzf chthonia-0.0.2-linux-x86_64.tar.gz
-chthonia-0.0.2-linux-x86_64/bin/chthonia
+tar -xzf chthonia-0.0.3-linux-x86_64.tar.gz
+chthonia-0.0.3-linux-x86_64/bin/chthonia
 ```
 
 Chthonia's window needs WebKitGTK 6.0 and GTK 4 (on Debian and Ubuntu the
