@@ -8,9 +8,10 @@
 # Help as a tab of the editor, beside the files (the editor pane lists the
 # help view). No project tree: File ▸ Project… lists the project's files. A
 # pane visible at startup whose active view is the REPL starts its session
-# when the window opens (init_view_es).
+# when the window opens (init_view_es). The editor numbers its lines and
+# marks the caret line (`gutter`), as VS Code does.
 # The same format as profiles/default.layout.
 @window main
-pane editor tabs views source help focus
+pane editor tabs views source help focus gutter
 pane sidebar right 25% tabs views symbols outline mdpreview
 pane panel bottom 35% tabs views repl problems output terminal
