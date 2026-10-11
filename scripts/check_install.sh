@@ -16,17 +16,18 @@
 #
 # Each probe runs from a directory of its own with no user configuration
 # and no library path, and each control must fail:
-#   0. the installation carries its madc: bin/madc runs, and on Linux
-#      chthonia loads libmadc from PREFIX/lib;
+#   0. the installation carries its madcide and madc: bin/madc runs,
+#      bin/madcide prints its usage line, and on Linux chthonia loads libmadc
+#      from PREFIX/lib;
 #   1. chthonia prints its usage line;
 #   2. `-c check` over a C file that includes <stdio.h> is clean: madc's
 #      installed headers and engine serve it [control: a syntax error is 1
 #      problem, exit status 1];
 #   3. its bundle is the installed one: its menu bar has no Window menu
 #      [control: the bundle hidden, chthonia runs the default profile, whose
-#      Window menu is listed]; so it is when started inside a madc source
-#      tree (a tools/madcide/ with plugins and profiles of its own): an
-#      installed program reads its installation's data;
+#      Window menu is listed]; so it is when started inside a madcide
+#      source tree (a tools/madcide/ with plugins and profiles of its own):
+#      an installed program reads its installation's data;
 #   4. Tools ▸ Key bindings… is on its Tools menu and lists madcide's six key
 #      styles [control: madcide's profiles hidden, it lists none];
 #   5. on Linux, its desktop entry and its 256 px icon are installed.
@@ -82,6 +83,11 @@ case "$out" in
 "madc "[0-9]*) ok "the installation carries its madc (${out%%$'\n'*})" ;;
 *) fail "no madc of its own in $prefix/bin (got: $out)" ;;
 esac
+out=$(cd "$work" && capped 60 env -u LD_LIBRARY_PATH -u DYLD_LIBRARY_PATH "MADCIDE_CONFIG_DIR=$work/no-config" "$prefix/bin/madcide$sfx" --help 2>&1)
+case "$out" in
+*"usage: madcide"*) ok "the installation carries its madcide" ;;
+*) fail "no madcide of its own in $prefix/bin (got: $out)" ;;
+esac
 if [ "$linux" = 1 ]; then
 	# ldd names it as found: <prefix>/bin/../lib/... through $ORIGIN.
 	lib=$(env -u LD_LIBRARY_PATH ldd "$chthonia" | awk '$1 == "libmadc.so.0" { print $3 }')
@@ -127,7 +133,7 @@ case "$out" in
 *"Split Window"*) ok "control: the bundle hidden, the default profile's Window menu is listed" ;;
 *) fail "control broken: the bundle hidden, no Window menu either (got: $out)" ;;
 esac
-# A madc checkout's tools/madcide/ holds the default bundle and the key
+# A madcide checkout's tools/madcide/ holds the default bundle and the key
 # styles, never Chthonia's: copies of the installed ones stand in for them.
 mkdir -p "$work/tree/tools/madcide/plugins"
 cp -R "$data/plugins/default" "$work/tree/tools/madcide/plugins/"

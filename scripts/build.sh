@@ -1,19 +1,20 @@
 #!/bin/bash
-# build.sh — build Chthonia with a madc.
+# build.sh — build Chthonia with the madc a madcide release carries.
 #
 #   scripts/build.sh [-o OUT]
 #
 #   MADC             the madc to build with, as a command (default: madc on
-#                    PATH; "wine madc.exe" builds the Windows executable)
+#                    PATH; "wine madc.exe" builds the Windows executable):
+#                    the one in madcide's folder, beside madcide
 #   MADCIDE_INCLUDE  madcide's public headers (default: the installed ones,
 #                    beside MADC; scripts/common.sh)
 #   -o OUT           the executable (default: build/chthonia, with the
 #                    platform's suffix)
 #
-# Chthonia is two units (chthonia.json): its plugin's code and its main.
-# Both include madcide's public headers, and the program links libmadcide,
-# madcide's base as a library (the manifest's "libs"), which the madc install
-# provides.
+# Chthonia is one unit (chthonia.json), its main. It includes madcide's
+# public headers, and the program links libmadcide, madcide's base as a
+# library (the manifest's "libs"), which madcide's install provides in
+# madc's library directory.
 set -eu
 . "$(dirname "$0")/common.sh"
 out=$here/build/chthonia$exe

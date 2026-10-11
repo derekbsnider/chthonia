@@ -2,8 +2,8 @@
 // chthonia.layout
 // (the editor, and below it the REPL as the visible panel's first tab with
 // Problems, Output and Terminal beside it; the Symbols view in the right
-// sidebar), chthonia.menu (the beginner's subset of the command vocabulary)
-// and chthonia.mad (its code, the Symbols view). Pins:
+// sidebar), chthonia.menu (the beginner's subset of the command vocabulary),
+// all data: the Symbols view is madcide's own. Pins:
 //   1. `open(path, ro, "chthonia")` (the command line's --profile) loads the
 //      bundle from Chthonia's own directory (the runner's
 //      MADCIDE_PLUGIN_PATH): this test's MADCIDE_CONFIG_DIR holds no bundle
@@ -28,28 +28,25 @@
 //      for this bundle in settings.json (this test's configuration
 //      directory, its .env), so the next chthonia session opens with it
 //      while the default bundle keeps its own keys;
-//   8. the Symbols view, its code activated from source: after F5 on a
+//   8. the Symbols view (madcide's, which the layout lists): after F5 on a
 //      program of two functions plus a global its rows read
 //      `count int 3` and `square int (int)`; choosing `square` moves the
 //      caret to its line; an entry `int y = 7;` adds its row; Stop empties
 //      the view;
-//   9. the same, its code activated from the library --build-plugin built
-//      (a copy of the bundle in this test's configuration directory, which
-//      the search path puts first).
-//  10. View ▸ Outline and Tools ▸ Options: the View and
+//   9. View ▸ Outline and Tools ▸ Options: the View and
 //      Tools menus list them; outline shows in the sidebar beside Symbols
 //      (the file's main) and toggles back; options opens and closes its pane.
-//  11. Edit ▸ Clear REPL (`replclear`, Ctrl+L), in pins 8-9's session: the
+//  10. Edit ▸ Clear REPL (`replclear`, Ctrl+L), in pin 8's session: the
 //      transcript had text and is empty; the session is live and the
 //      Symbols rows stay.
-//  12. Projects and building: File lists Project…, Open Project… and Add
+//  11. Projects and building: File lists Project…, Open Project… and Add
 //      Current File to Project; the Build menu as the window composes it is
 //      Build… followed by the build rows (Check, Build, Run, Stop); its Build
 //      row, run in this bundle, builds the file into an executable (the
 //      file's name without its extension), which the test then removes.
-//  13. Help ▸ Help Contents opens Help as a tab of the editor, current, not
+//  12. Help ▸ Help Contents opens Help as a tab of the editor, current, not
 //      in the sidebar; File ▸ Close on it returns the editor to the file.
-//  14. The colours are VS Code's Dark+ (madcide's shipped `vscode` scheme,
+//  13. The colours are VS Code's Dark+ (madcide's shipped `vscode` scheme,
 //      the bundle's `theme`): keyword #569cd6, control #c586c0, a user's
 //      type #4ec9b0 on the #1e1e1e window; the default profile keeps JOE's
 //      look (keyword bold).
@@ -141,7 +138,7 @@ void symbols_rows(var &out, IdeSession &S, long doc)
 	out = format("{}{}|", out, it["content"]);
 }
 
-// Pins 8-9 over one session: F5, a row chosen, an entry, Stop.
+// Pin 8 over one session: F5, a row chosen, an entry, Stop.
 void symbols_gate(IdeSession &S, long doc, const char *label)
 {
     long w = S.w;
@@ -160,7 +157,7 @@ void symbols_gate(IdeSession &S, long doc, const char *label)
     var vn = "symbols";
     long kind = view_of_w(w, vn);
     var rows;
-    ui::get(rows, w, es, "chthonia.symbols");
+    ui::get(rows, w, es, "repl.symbols");
     long opt = 0;
     long i = 1;
     for ( var r : rows )
@@ -261,7 +258,7 @@ int main()
 	    view_shown(S.w, S.es, viewOUTLINE) ? 0 : 1,
 	    side2 != viewNONE && side2 != viewOUTLINE ? 1 : 0,
 	    optshown, cur_pane(S.w, S.es) == paneNONE ? 1 : 0);
-    // 13. Help ▸ Help Contents: Help opens as a tab of the editor (the
+    // 12. Help ▸ Help Contents: Help opens as a tab of the editor (the
     //     layout's editor pane lists the help view) and is current; the
     //     sidebar does not show it; File ▸ Close on the Help tab hands the
     //     editor the file again, as the later pins expect.
@@ -331,12 +328,10 @@ int main()
     json_object_read(kept, why, spath);
     println("keystyle-choose: keys={} msg={} kept={}", k, msg, kept["keys"]["chthonia"]);
 
-    // 8. The Symbols view, its code from source.
-    println("symbols-code: transport-source={}",
-	    plugin_active_transport(S.w, "chthonia") == ptSOURCE ? 1 : 0);
+    // 8. The Symbols view.
     symbols_gate(S, doc, "symbols");
 
-    // 12. Projects and building.
+    // 11. Projects and building.
     menu_bar(titles, ids, S.w, S.es, "File");
     println("chthonia-file: [{}]", ids);
     var bar;
@@ -398,41 +393,6 @@ int main()
     ui::get(k, D.w, D.es, "profile");
     println("keystyle-default: keys={}", k);
     D.close();
-
-    // 9. The same from the library --build-plugin built, in a copy of the
-    // bundle that the search path finds first.
-    var pdir = format("{}/plugins", cfg);
-    var bdir = format("{}/chthonia", pdir);
-    php::mkdir(pdir.c_str());
-    php::mkdir(bdir.c_str());
-    var shipped;
-    plugin_find(shipped, "chthonia");
-    var parts = { "chthonia.plugin", "chthonia.layout", "chthonia.menu", "chthonia.mad" };
-    for ( var f : parts )
-    {
-	var text;
-	php::file_get_contents(text, format("{}/{}", shipped, f));
-	php::file_put_contents(format("{}/{}", bdir, f), text.c_str());
-    }
-    var bwhy;
-    var brows;
-    bool built = plugin_build(bwhy, brows, bdir.c_str());
-    IdeSession L;
-    long ldoc = L.open(path, false, "chthonia");
-    if ( built )
-	bwhy = "";		// the library's path: its suffix is the platform's
-    println("symbols-lib: built={}{} transport-library={}", built ? 1 : 0, bwhy,
-	    plugin_active_transport(L.w, "chthonia") == ptLIBRARY ? 1 : 0);
-    symbols_gate(L, ldoc, "symbols-lib");
-    L.close();
-    for ( var f : parts )
-	php::unlink(format("{}/{}", bdir, f));
-    var lib;
-    var vb = bdir;
-    plugin_library_path(lib, vb, "chthonia");
-    php::unlink(lib.c_str());
-    php::rmdir(bdir.c_str());
-    php::rmdir(pdir.c_str());
 
     php::unlink(spath.c_str());
     php::rmdir(cfg.c_str());

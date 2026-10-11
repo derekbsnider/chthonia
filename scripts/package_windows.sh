@@ -2,8 +2,9 @@
 # package_windows.sh — Chthonia's Windows zip, standing alone:
 #
 #   chthonia-<ver>-windows-x86_64.zip   one folder, chthonia-<ver>-windows-
-#                                       x86_64\: the madc release it is paired
-#                                       with (madc's zip) and Chthonia in it —
+#                                       x86_64\: the madcide release it is
+#                                       built on (madcide's zip, which carries
+#                                       its madc) and Chthonia in it —
 #                                       chthonia.exe beside madc.exe, where it
 #                                       binds libmadc-0.dll and madcide.dll,
 #                                       its bundle beside madcide's shipped
@@ -11,10 +12,10 @@
 #
 #   scripts/package_windows.sh [-o DIST]
 #
-#   MADC          the Windows madc, as a command: "wine <madc folder>/bin/madc.exe"
-#                 on Linux, <madc folder>/bin/madc.exe on Windows
-#   MADC_PACKAGE  that madc's release zip, which the zip carries
-#   MADCIDE_INCLUDE, MADCIDE   as build.sh and stage.sh
+#   MADC          the Windows madc, as a command: "wine <madcide folder>/bin/madc.exe"
+#                 on Linux, <madcide folder>/bin/madc.exe on Windows
+#   MADCIDE_PACKAGE  that madcide's release zip, which the zip carries
+#   MADCIDE_INCLUDE  as build.sh and stage.sh
 #   -o DIST       where the zip goes (default dist/), its line in its SHA256SUMS
 #
 # The version is chthonia_version.h's. The zip is checked to hold exactly
@@ -34,7 +35,7 @@ if [ "$exe" != .exe ]; then
 fi
 ver=$(sed -n 's/^#define CHTHONIA_VERSION "\(.*\)"$/\1/p' "$here/chthonia_version.h")
 [ -n "$ver" ] || { echo "package_windows.sh: no CHTHONIA_VERSION in chthonia_version.h" >&2; exit 1; }
-madc_paired || exit 1
+madcide_paired || exit 1
 
 work=$here/tmp/package-windows
 rm -rf "$work"
@@ -42,7 +43,7 @@ mkdir -p "$work" "$dist"
 dist=$(cd "$dist" && pwd)
 bash "$here/scripts/build.sh" -o "$work/chthonia.exe"
 folder=chthonia-$ver-windows-x86_64
-madc_unpack "$madc_pkg" "$work/zip/$folder"
+madcide_unpack "$madcide_pkg" "$work/zip/$folder"
 CHTHONIA="$work/chthonia.exe" bash "$here/scripts/stage.sh" windows "$work/zip/$folder"
 plain_modes "$work/zip"
 zipname=$folder.zip
@@ -55,4 +56,4 @@ if ! diff <(unzip -Z1 "$dist/$zipname" | grep -v '/$' | LC_ALL=C sort) \
 	exit 1
 fi
 refresh_sums "$dist" "$zipname"
-echo "package_windows.sh: $dist/$zipname (madc $madc_ver)"
+echo "package_windows.sh: $dist/$zipname (madcide $madcide_ver, madc $madc_ver)"

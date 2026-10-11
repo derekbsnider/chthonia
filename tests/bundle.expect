@@ -11,7 +11,6 @@ chthonia-dropdown-unknown: No menu 'Debug'.
 chthonia-new: untitled=1 differs=1
 keystyle-list: tools=[keystyle options] listed=true marked=true
 keystyle-choose: keys=vscode msg=Keys: VS Code. kept=vscode
-symbols-code: transport-source=1
 symbols-f5: [count int 3|main int (void)|square int (int)|]
 symbols-goto: square-line=1
 symbols-entry: [count int 3|main int (void)|square int (int)|y int 7|]
@@ -26,9 +25,3 @@ default-menu: [File Edit Search View Window Build Help]
 default-theme: keyword=bold
 default-toolbar: none
 keystyle-default: keys=joe
-symbols-lib: built=1 transport-library=1
-symbols-lib-f5: [count int 3|main int (void)|square int (int)|]
-symbols-lib-goto: square-line=1
-symbols-lib-entry: [count int 3|main int (void)|square int (int)|y int 7|]
-symbols-lib-clear: had-text=1 empty=1 live=1 rows=[count int 3|main int (void)|square int (int)|y int 7|]
-symbols-lib-stop: [(empty)|]

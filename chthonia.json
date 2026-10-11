@@ -1,11 +1,10 @@
 {
-  "madc": "0.102.1",
+  "madcide": "0.7.0",
   "output": "chthonia",
   "kind": "gui",
   "icon": "chthonia.ico",
   "libs": [ "madcide" ],
   "tus": [
-    "plugins/chthonia/chthonia.mad",
     "chthonia_main.mad"
   ]
 }

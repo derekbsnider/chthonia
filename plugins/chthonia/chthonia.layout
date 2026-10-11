@@ -1,8 +1,8 @@
 # Chthonia's workbench: the teaching layout. The editor above, and below it
 # the REPL as the visible panel's first tab, with Problems, Output (a
 # build's messages) and Terminal (the program Build ▸ Run starts) beside it;
-# on the right the Symbols view (Chthonia's own code, chthonia.mad: the
-# session's names — its functions and its variables) with the Outline as its
+# on the right the Symbols view (madcide's: the REPL session's names — its
+# functions and its variables) with the Outline as its
 # second tab (View ▸ Outline shows it there) and the Markdown preview of a .md
 # buffer as its third (View ▸ Markdown preview). Help ▸ Help Contents opens
 # Help as a tab of the editor, beside the files (the editor pane lists the

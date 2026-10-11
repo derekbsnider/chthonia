@@ -2,18 +2,21 @@
 #
 #   here    Chthonia's top directory
 #   madc    MADC, the madc to use, as a command (default: madc on PATH;
-#           "wine <madc folder>/bin/madc.exe" for the Windows one)
+#           "wine <madcide folder>/bin/madc.exe" for the Windows one) — the
+#           madc a madcide release carries
 #   exe     the executable suffix of madc's platform ("" or ".exe")
 #   chthonia_setup
 #           sets inc (madcide's public headers) and bundle (Chthonia's
 #           bundle), both absolute, or says why it cannot
-#   madcide_cmd
-#           the madcide beside madc, as a command (MADCIDE overrides)
-#   madc_paired
-#           MADC_PACKAGE, the madc release package Chthonia's packages carry,
-#           checked to be the madc that builds them (madc_pkg, madc_ver)
-#   madc_unpack PACKAGE ROOT
-#           a madc release package unpacked into ROOT, madc's folder layout
+#   madcide_paired
+#           MADCIDE_PACKAGE, the madcide release package Chthonia's packages
+#           carry (madcide with the madc it is built on), as madcide_pkg and
+#           its version madcide_ver, and the version of the madc building
+#           Chthonia as madc_ver
+#   madcide_unpack PACKAGE ROOT
+#           a madcide release package unpacked into ROOT, madc's folder
+#           layout with madcide in it, checked to carry the madc that builds
+#           Chthonia
 #   refresh_sums DIST FILE...
 #           DIST/SHA256SUMS's lines for the packages just made
 #   plain_modes DIR
@@ -21,11 +24,10 @@
 #   capped SECONDS COMMAND...
 #           COMMAND under a wall-clock and a CPU limit
 #
-# madcide's public headers are MADCIDE_INCLUDE, else the madc install's:
-# <prefix>/share/madcide/include (Linux, macOS), or the include directory
-# beside madc.exe (Windows, where madcide's data sits beside the programs).
-# Chthonia's bundle is the directory of its plugin's code, the unit
-# chthonia.json names.
+# madcide's public headers are MADCIDE_INCLUDE, else the install's beside
+# madc: <prefix>/share/madcide/include (Linux, macOS), or the include
+# directory beside madc.exe (Windows, where madcide's data sits beside the
+# programs). Chthonia's bundle is plugins/chthonia, its plugin's directory.
 
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 madc=${MADC:-madc}
@@ -79,22 +81,11 @@ chthonia_setup() {
 		echo "$(basename "$0"): no <madcide/harness> in ${MADCIDE_INCLUDE:-$inc} — set MADCIDE_INCLUDE" >&2
 		return 1
 	fi
-	local code
-	code=$(sed -n 's|^[[:space:]]*"\(.*\)/chthonia\.mad",\{0,1\}[[:space:]]*$|\1|p' "$here/chthonia.json")
-	if ! bundle=$(cd "$here/$code" 2>/dev/null && pwd) || [ ! -f "$bundle/chthonia.plugin" ]; then
-		echo "$(basename "$0"): chthonia.json's plugin unit ($code/chthonia.mad) is not beside chthonia.plugin" >&2
+	bundle=$here/plugins/chthonia
+	if [ ! -f "$bundle/chthonia.plugin" ]; then
+		echo "$(basename "$0"): no chthonia.plugin in $bundle" >&2
 		return 1
 	fi
-}
-
-madcide_cmd() {
-	if [ -n "${MADCIDE:-}" ]; then
-		echo "$MADCIDE"
-		return
-	fi
-	local b
-	b=$(madc_bindir)
-	echo "$madc_pre${b:+$b/}madcide$exe"
 }
 
 # refresh_sums DIST FILE... — DIST/SHA256SUMS gets these files' lines and
@@ -116,61 +107,71 @@ refresh_sums() {
 	)
 }
 
-# madc_paired — MADC_PACKAGE, the madc release package every Chthonia
-# package carries (its .zip, .tar.gz or .deb), as madc_pkg (absolute), and
-# its version as madc_ver: the release of the madc that builds Chthonia,
-# since chthonia links the libraries it ships with.
-madc_paired() {
-	madc_pkg=${MADC_PACKAGE:-}
-	if [ -z "$madc_pkg" ] || [ ! -f "$madc_pkg" ]; then
-		echo "$(basename "$0"): MADC_PACKAGE names no madc release package ('$madc_pkg'): Chthonia's packages carry madc" >&2
+# madcide_paired — MADCIDE_PACKAGE, the madcide release package every
+# Chthonia package carries (its .zip, .tar.gz or .deb: madcide with the madc
+# release it is built on), as madcide_pkg (absolute) and its version as
+# madcide_ver, and the version of the madc building Chthonia as madc_ver:
+# chthonia links the libraries the package ships, so madcide_unpack checks
+# the package's madc is that one.
+madcide_paired() {
+	madcide_pkg=${MADCIDE_PACKAGE:-}
+	if [ -z "$madcide_pkg" ] || [ ! -f "$madcide_pkg" ]; then
+		echo "$(basename "$0"): MADCIDE_PACKAGE names no madcide release package ('$madcide_pkg'): Chthonia's packages carry madcide and its madc" >&2
 		return 1
 	fi
-	madc_pkg=$(cd "$(dirname "$madc_pkg")" && pwd)/$(basename "$madc_pkg")
+	madcide_pkg=$(cd "$(dirname "$madcide_pkg")" && pwd)/$(basename "$madcide_pkg")
+	madcide_ver=$(basename "$madcide_pkg" | sed -n 's/^madcide[-_]\([0-9]*\.[0-9]*\.[0-9]*\)[-_.].*/\1/p')
+	if [ -z "$madcide_ver" ]; then
+		echo "$(basename "$0"): MADCIDE_PACKAGE ($madcide_pkg) is not named as a madcide release package" >&2
+		return 1
+	fi
 	# shellcheck disable=SC2086
 	madc_ver=$($madc --version | sed -n 's/^madc \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' | head -1)
-	local pv
-	pv=$(basename "$madc_pkg" | sed -n 's/^madc[-_]\([0-9]*\.[0-9]*\.[0-9]*\)[-_.].*/\1/p')
-	if [ -z "$madc_ver" ] || [ "$pv" != "$madc_ver" ]; then
-		echo "$(basename "$0"): MADC_PACKAGE is madc '$pv', the madc building Chthonia ($madc) is '$madc_ver'" >&2
+	if [ -z "$madc_ver" ]; then
+		echo "$(basename "$0"): the madc building Chthonia ($madc) names no version" >&2
 		return 1
 	fi
 }
 
-# madc_unpack PACKAGE ROOT — a madc release package unpacked into ROOT in
-# madc's folder layout (bin/, lib/, share/, its notices), the layout its
-# zip and tarballs have. A .deb's usr/ is that layout but for its libraries
-# in the system's multiarch directory (usr/lib/<triplet>/): they move up to
-# lib/, where madc's programs look for them ($ORIGIN/../lib).
-madc_unpack() {
-	local pkg=$1 root=$2 t top d
+# madcide_unpack PACKAGE ROOT — a madcide release package unpacked into
+# ROOT: madc's folder layout (bin/, lib/, share/, the notices) with madcide
+# in it, the layout madcide's zip and tarballs have and its .deb installs in
+# usr/lib/madcide/. Its bin/madc must be the madc building Chthonia
+# (madc_ver, from madcide_paired).
+madcide_unpack() {
+	local pkg=$1 root=$2 t top v
 	t=$(mktemp -d)
 	case "$pkg" in
 	*.zip) unzip -q "$pkg" -d "$t/x" ;;
 	*.tar.gz) mkdir "$t/x" && tar -xzf "$pkg" -C "$t/x" ;;
 	*.deb) dpkg-deb -x "$pkg" "$t/deb" ;;
-	*) echo "madc_unpack: $pkg is not a madc release package (.zip, .tar.gz, .deb)" >&2
+	*) echo "madcide_unpack: $pkg is not a madcide release package (.zip, .tar.gz, .deb)" >&2
 	   rm -rf "$t"; return 1 ;;
 	esac
 	mkdir -p "$root"
 	if [ -d "$t/deb" ]; then
-		cp -R "$t/deb/usr/." "$root/"
-		for d in "$root"/lib/*-linux-gnu; do
-			[ -d "$d" ] || continue
-			mv "$d"/* "$root/lib/"
-			rmdir "$d"
-		done
+		if [ ! -d "$t/deb/usr/lib/madcide" ]; then
+			echo "madcide_unpack: $pkg holds no usr/lib/madcide" >&2
+			rm -rf "$t"; return 1
+		fi
+		cp -R "$t/deb/usr/lib/madcide/." "$root/"
 	else
 		top=$(ls -A "$t/x")
 		if [ "$(printf '%s\n' "$top" | wc -l | tr -d ' ')" != 1 ] || [ ! -d "$t/x/$top" ]; then
-			echo "madc_unpack: $pkg does not hold one folder" >&2
+			echo "madcide_unpack: $pkg does not hold one folder" >&2
 			rm -rf "$t"; return 1
 		fi
 		cp -R "$t/x/$top/." "$root/"
 	fi
 	rm -rf "$t"
-	if [ ! -f "$root/bin/madc$exe" ]; then
-		echo "madc_unpack: $pkg holds no bin/madc$exe" >&2
+	if [ ! -f "$root/bin/madc$exe" ] || [ ! -f "$root/bin/madcide$exe" ]; then
+		echo "madcide_unpack: $pkg holds no bin/madc$exe and bin/madcide$exe" >&2
+		return 1
+	fi
+	# shellcheck disable=SC2086
+	v=$($madc_pre"$root/bin/madc$exe" --version | sed -n 's/^madc \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' | head -1)
+	if [ "$v" != "$madc_ver" ]; then
+		echo "madcide_unpack: $pkg carries madc '$v', the madc building Chthonia ($madc) is '$madc_ver'" >&2
 		return 1
 	fi
 }

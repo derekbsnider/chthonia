@@ -17,12 +17,11 @@
 #
 #   CHTHONIA  the built program (default: build/chthonia, with the
 #             platform's suffix)
-#   MADC      as build.sh; the bundle's library is built by the madcide
-#             beside it (MADCIDE, a command, overrides)
+#   MADC      as build.sh
 #
-# The bundle installs as one of madcide's shipped plugins, where the plugin
-# search path looks, with its code's library built beside it, so madcide's
-# --profile chthonia loads it without compiling it first.
+# The bundle (data only: keys, layout, menus, help, colours) installs as one
+# of madcide's shipped plugins, where the plugin search path looks, so
+# madcide's --profile chthonia loads it as chthonia does.
 set -eu
 . "$(dirname "$0")/common.sh"
 if [ $# -ne 2 ]; then
@@ -47,11 +46,6 @@ mkdir -p "$bindir" "$data/plugins"
 install -m 755 "$prog" "$bindir/chthonia$exe"
 rm -rf "$data/plugins/chthonia"
 cp -R "$bundle" "$data/plugins/chthonia"
-# shellcheck disable=SC2046
-if ! capped 300 $(madcide_cmd) --build-plugin "$data/plugins/chthonia" > /dev/null; then
-	echo "stage.sh: the bundle's library did not build ($(madcide_cmd) --build-plugin)" >&2
-	exit 1
-fi
 plain_modes "$data/plugins/chthonia"
 if [ "$layout" = linux ]; then
 	mkdir -p "$root/share/applications"

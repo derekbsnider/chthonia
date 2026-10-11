@@ -1,25 +1,26 @@
 #!/bin/bash
 # package_linux.sh — Chthonia's Linux packages, each standing alone: each
-# carries the madc release it is paired with, so one package is the whole
-# install.
+# carries the madcide release it is built on, and so the madc release that
+# madcide carries; one package is the whole install.
 #
-#   chthonia_<ver>-<rel>_<arch>.deb       install Chthonia and its madc in
-#   chthonia-<ver>-<rel>.<arch>.rpm       /usr/lib/chthonia/ (madc's folder
-#                                         layout), with /usr/bin/chthonia, the
-#                                         desktop entry and the icons under
-#                                         /usr; no madc package needed, none
-#                                         disturbed
+#   chthonia_<ver>-<rel>_<arch>.deb       install Chthonia, madcide and their
+#   chthonia-<ver>-<rel>.<arch>.rpm       madc in /usr/lib/chthonia/ (madc's
+#                                         folder layout), with /usr/bin/chthonia,
+#                                         the desktop entry and the icons under
+#                                         /usr; no madc or madcide package
+#                                         needed, none disturbed
 #   chthonia-<ver>-linux-<arch>.tar.gz    one folder, chthonia-<ver>-linux-
-#                                         <arch>/: madc's tarball with
+#                                         <arch>/: madcide's tarball with
 #                                         Chthonia in it. Unpack it, run
 #                                         bin/chthonia.
 #
 #   scripts/package_linux.sh [--deb] [-o DIST]
 #
-#   MADC, MADCIDE_INCLUDE, MADCIDE   as build.sh and stage.sh
-#   MADC_PACKAGE                     that madc's release package, which the
-#                                    packages carry: its tarball, or for
-#                                    --deb the .deb of this Ubuntu release
+#   MADC, MADCIDE_INCLUDE            as build.sh and stage.sh
+#   MADCIDE_PACKAGE                  that madcide's release package, which
+#                                    the packages carry: its tarball, or for
+#                                    --deb the .deb of this Ubuntu release;
+#                                    its madc is the one MADC names
 #   PKG_RELEASE                      the package revision (default 1)
 #   --deb                            the .deb alone (another Ubuntu release's)
 #   -o DIST                          where the packages go (default dist/),
@@ -31,7 +32,7 @@
 # package is checked to hold exactly the staged files, each readable by
 # every user.
 #
-# One .deb per Ubuntu release, built on it with that release's madc: on
+# One .deb per Ubuntu release, built on it with that release's madcide: on
 # Ubuntu the revision is <rel>~ubuntu<VERSION_ID>, as madc's is, and the
 # Depends is what the binaries link at this host's versions
 # (dpkg-shlibdeps), so a package built for a newer release never installs
@@ -66,7 +67,7 @@ if [ -z "$ver" ]; then
 	echo "package_linux.sh: no CHTHONIA_VERSION in chthonia_version.h" >&2
 	exit 1
 fi
-madc_paired || exit 1
+madcide_paired || exit 1
 case "$(uname -m)" in
 x86_64) deb_arch=amd64; rpm_arch=x86_64 ;;
 aarch64) deb_arch=arm64; rpm_arch=aarch64 ;;
@@ -85,9 +86,9 @@ mkdir -p "$work" "$dist"
 dist=$(cd "$dist" && pwd)
 bash "$here/scripts/build.sh" -o "$work/chthonia"
 strip --strip-unneeded "$work/chthonia"
-# stage ROOT — the paired madc's folder with Chthonia in it.
+# stage ROOT — the paired madcide's folder with Chthonia in it.
 stage() {
-	madc_unpack "$madc_pkg" "$1"
+	madcide_unpack "$madcide_pkg" "$1"
 	CHTHONIA="$work/chthonia" bash "$here/scripts/stage.sh" linux "$1"
 }
 # stage_system USR — a package's usr/: the folder in lib/chthonia/, and what
@@ -203,7 +204,7 @@ if [ "$etc" != "$want" ]; then
 fi
 if [ "$deb_only" = 1 ]; then
 	refresh_sums "$dist" "$deb"
-	echo "package_linux.sh: $dist/$deb (madc $madc_ver)"
+	echo "package_linux.sh: $dist/$deb (madcide $madcide_ver, madc $madc_ver)"
 	exit 0
 fi
 
@@ -247,7 +248,7 @@ cp "$rpmtop/RPMS/$rpm_arch/$rpm" "$dist/"
 check "$rpm" "$(rpm -qlvp "$dist/$rpm" | awk '$1 !~ /^d/ { print ($(NF-1) == "->") ? $(NF-2) : $NF }' | sed 's|^/usr/||')" "$debroot/usr"
 check_modes "$rpm" "$(rpm -qlvp "$dist/$rpm")"
 
-# ---- tarball: one folder, madc's tarball with Chthonia in it ----
+# ---- tarball: one folder, madcide's tarball with Chthonia in it ----
 tarstage=$work/tar
 folder=chthonia-$ver-linux-$rpm_arch
 stage "$tarstage/$folder"
@@ -258,4 +259,4 @@ check "$tgz" "$(tar -tzf "$dist/$tgz" | grep -v '/$')" "$tarstage"
 check_modes "$tgz" "$(tar -tzvf "$dist/$tgz")"
 
 refresh_sums "$dist" "$deb" "$rpm" "$tgz"
-echo "package_linux.sh: $dist/{$deb,$rpm,$tgz} (madc $madc_ver)"
+echo "package_linux.sh: $dist/{$deb,$rpm,$tgz} (madcide $madcide_ver, madc $madc_ver)"

@@ -1,6 +1,6 @@
 // Chthonia in the window: the chthonia bundle opened
-// as the command line's --profile opens it, its code active (the Symbols
-// view in the right sidebar). A click on the toolbar's Run posts replrun:
+// as the command line's --profile opens it (madcide's Symbols view in the
+// right sidebar). A click on the toolbar's Run posts replrun:
 // the editor's buffer runs into a fresh session, main's output reaches the
 // REPL tab on the pump's wakes, and the sidebar draws the program's names.
 // A click on Stop posts replstop: the session stops (a fresh one starts)

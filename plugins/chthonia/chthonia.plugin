@@ -2,7 +2,6 @@
   "name": "chthonia",
   "title": "Learning",
   "api": 3,
-  "code": "chthonia.mad",
   "contributes": {
     "keys": "chthonia",
     "status": "chthonia",

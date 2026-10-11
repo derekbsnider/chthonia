@@ -71,7 +71,9 @@ More in [Getting started](docs/getting-started.md).
 - [The REPL](docs/repl.md)
 - [Keyboard shortcuts](docs/keyboard.md)
 - [Building Chthonia from source](docs/building.md), for contributors: it
-  is built with [madc](https://github.com/derekbsnider/madc)
+  is built on [madcide](https://github.com/derekbsnider/madcide), the IDE,
+  with the [madc](https://github.com/derekbsnider/madc) compiler madcide
+  carries
 
 ## License
 

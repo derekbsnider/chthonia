@@ -1,13 +1,14 @@
 # ci.yml — Chthonia built, tested and packaged on Linux, Windows and macOS:
-# each job takes madc from a madc release's assets, builds and tests
-# Chthonia with it, then packages Chthonia WITH that release (MADC_PACKAGE):
-# every package stands alone, one download, one installer. Each installed
-# check runs on Chthonia's package alone, no other madc present.
+# each job takes madcide, and the madc it carries, from a madcide release's
+# assets, builds and tests Chthonia with them, then packages Chthonia WITH
+# that release (MADCIDE_PACKAGE): every package stands alone, one download,
+# one installer. Each installed check runs on Chthonia's package alone, no
+# other madc or madcide present.
 #
-# The madc release is v<chthonia.json's "madc"> (the oldest madc that builds
-# Chthonia), or the dispatch's madc_tag. A draft release's assets read with
-# the MADC_RELEASES_TOKEN secret (read access to madc's releases); a
-# published release's read with the workflow's own token.
+# The madcide release is v<chthonia.json's "madcide"> (the madcide Chthonia
+# is built on), or the dispatch's madcide_tag. A draft release's assets read
+# with the MADCIDE_RELEASES_TOKEN secret (read access to madcide's
+# releases); a published release's read with the workflow's own token.
 #
 # A v* tag also drafts Chthonia's release with every package and their
 # SHA256SUMS; the tag must be v<CHTHONIA_VERSION> (chthonia_version.h).
@@ -20,16 +21,16 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      madc_tag:
-        description: "the madc release to build against (default: v<chthonia.json's madc>)"
+      madcide_tag:
+        description: "the madcide release to build against (default: v<chthonia.json's madcide>)"
         required: false
         default: ''
 
 env:
-  MADC_REPO: derekbsnider/madc
+  MADCIDE_REPO: derekbsnider/madcide
 
 jobs:
-  madc:
+  madcide:
     runs-on: ubuntu-24.04
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
@@ -37,26 +38,26 @@ jobs:
       - uses: actions/checkout@v7
       - id: tag
         env:
-          WANT: ${{ inputs.madc_tag }}
+          WANT: ${{ inputs.madcide_tag }}
         run: |
           tag=$WANT
           if [ -z "$tag" ]; then
-            min=$(sed -n 's/^[[:space:]]*"madc":[[:space:]]*"\([0-9.]*\)".*/\1/p' chthonia.json)
-            if [ -z "$min" ]; then
-              echo "chthonia.json names no \"madc\" release" >&2
+            pin=$(sed -n 's/^[[:space:]]*"madcide":[[:space:]]*"\([0-9.]*\)".*/\1/p' chthonia.json)
+            if [ -z "$pin" ]; then
+              echo "chthonia.json names no \"madcide\" release" >&2
               exit 1
             fi
-            tag=v$min
+            tag=v$pin
           fi
-          echo "madc $tag"
+          echo "madcide $tag"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
   linux:
     runs-on: ubuntu-24.04
-    needs: madc
+    needs: madcide
     env:
-      MADC_TAG: ${{ needs.madc.outputs.tag }}
-      GH_TOKEN: ${{ secrets.MADC_RELEASES_TOKEN || github.token }}
+      MADCIDE_TAG: ${{ needs.madcide.outputs.tag }}
+      GH_TOKEN: ${{ secrets.MADCIDE_RELEASES_TOKEN || github.token }}
     steps:
       - uses: actions/checkout@v7
       - name: dependencies (the window's libraries, the display for its tests, rpmbuild)
@@ -64,13 +65,13 @@ jobs:
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
             libwebkitgtk-6.0-4 libgtk-4-1 xvfb rpm
-      - name: madc, from its release's tarball
+      - name: madcide and its madc, from madcide's release tarball
         run: |
-          gh release download "$MADC_TAG" -R "$MADC_REPO" -p 'madc-*-linux-x86_64.tar.gz' -D "$RUNNER_TEMP"
-          tar -xzf "$RUNNER_TEMP"/madc-*-linux-x86_64.tar.gz -C "$RUNNER_TEMP"
-          folder=$(ls -d "$RUNNER_TEMP"/madc-*-linux-x86_64)
+          gh release download "$MADCIDE_TAG" -R "$MADCIDE_REPO" -p 'madcide-*-linux-x86_64.tar.gz' -D "$RUNNER_TEMP"
+          tar -xzf "$RUNNER_TEMP"/madcide-*-linux-x86_64.tar.gz -C "$RUNNER_TEMP"
+          folder=$(ls -d "$RUNNER_TEMP"/madcide-*-linux-x86_64)
           echo "MADC=$folder/bin/madc" >> "$GITHUB_ENV"
-          echo "MADC_PACKAGE=$(ls "$RUNNER_TEMP"/madc-*-linux-x86_64.tar.gz)" >> "$GITHUB_ENV"
+          echo "MADCIDE_PACKAGE=$(ls "$RUNNER_TEMP"/madcide-*-linux-x86_64.tar.gz)" >> "$GITHUB_ENV"
       - name: build
         run: bash scripts/build.sh
       - name: tests
@@ -108,25 +109,26 @@ jobs:
           if-no-files-found: error
 
   linux-jammy:
-    # Ubuntu 22.04's .deb, built on 22.04 with madc's 22.04 .deb, which it
-    # carries (one .deb per Ubuntu release, as madc's). madc is installed
-    # with apt for the build, then removed: Chthonia's .deb installs alone.
+    # Ubuntu 22.04's .deb, built on 22.04 with madcide's 22.04 .deb, which it
+    # carries (one .deb per Ubuntu release, as madcide's). madcide is
+    # installed with apt for the build, then removed: Chthonia's .deb
+    # installs alone.
     runs-on: ubuntu-22.04
-    needs: madc
+    needs: madcide
     env:
-      MADC_TAG: ${{ needs.madc.outputs.tag }}
-      GH_TOKEN: ${{ secrets.MADC_RELEASES_TOKEN || github.token }}
+      MADCIDE_TAG: ${{ needs.madcide.outputs.tag }}
+      GH_TOKEN: ${{ secrets.MADCIDE_RELEASES_TOKEN || github.token }}
     steps:
       - uses: actions/checkout@v7
-      - name: madc, from its release's 22.04 .deb
+      - name: madcide and its madc, from madcide's 22.04 .deb
         run: |
           # A release asset's name has '.' where the package file had '~'
           # (GitHub's spelling), so the pattern names neither.
-          gh release download "$MADC_TAG" -R "$MADC_REPO" -p 'madc_*ubuntu22.04_amd64.deb' -D "$RUNNER_TEMP"
+          gh release download "$MADCIDE_TAG" -R "$MADCIDE_REPO" -p 'madcide_*ubuntu22.04_amd64.deb' -D "$RUNNER_TEMP"
           sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "$RUNNER_TEMP"/madc_*ubuntu22.04_amd64.deb xvfb
-          echo "MADC=/usr/bin/madc" >> "$GITHUB_ENV"
-          echo "MADC_PACKAGE=$(ls "$RUNNER_TEMP"/madc_*ubuntu22.04_amd64.deb)" >> "$GITHUB_ENV"
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "$RUNNER_TEMP"/madcide_*ubuntu22.04_amd64.deb xvfb
+          echo "MADC=/usr/lib/madcide/bin/madc" >> "$GITHUB_ENV"
+          echo "MADCIDE_PACKAGE=$(ls "$RUNNER_TEMP"/madcide_*ubuntu22.04_amd64.deb)" >> "$GITHUB_ENV"
       - name: build
         run: bash scripts/build.sh
       - name: tests
@@ -135,9 +137,9 @@ jobs:
         run: xvfb-run -a bash scripts/run_tests.sh --gui
       - name: package (.deb)
         run: bash scripts/package_linux.sh --deb
-      - name: installed — the .deb alone, madc's removed
+      - name: installed — the .deb alone, madcide's removed
         run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y -qq madc
+          sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y -qq madcide
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ./dist/chthonia_*ubuntu22.04_amd64.deb
           sudo bash scripts/check_install.sh /usr/lib/chthonia /usr
       - uses: actions/upload-artifact@v7
@@ -148,24 +150,24 @@ jobs:
 
   windows:
     runs-on: windows-latest
-    needs: madc
+    needs: madcide
     defaults:
       run:
         shell: bash
     env:
-      MADC_TAG: ${{ needs.madc.outputs.tag }}
-      GH_TOKEN: ${{ secrets.MADC_RELEASES_TOKEN || github.token }}
+      MADCIDE_TAG: ${{ needs.madcide.outputs.tag }}
+      GH_TOKEN: ${{ secrets.MADCIDE_RELEASES_TOKEN || github.token }}
     steps:
       - uses: actions/checkout@v7
       - name: zip and unzip
         run: choco install zip unzip -y --no-progress
-      - name: madc, from its release's zip
+      - name: madcide and its madc, from madcide's release zip
         run: |
           tmp=$(cygpath -u "$RUNNER_TEMP")
-          gh release download "$MADC_TAG" -R "$MADC_REPO" -p 'madc-*-windows-x86_64.zip' -D "$tmp"
-          unzip -q "$tmp"/madc-*-windows-x86_64.zip -d "$tmp"
-          echo "MADC=$(ls -d "$tmp"/madc-*-windows-x86_64)/bin/madc.exe" >> "$GITHUB_ENV"
-          echo "MADC_PACKAGE=$(ls "$tmp"/madc-*-windows-x86_64.zip)" >> "$GITHUB_ENV"
+          gh release download "$MADCIDE_TAG" -R "$MADCIDE_REPO" -p 'madcide-*-windows-x86_64.zip' -D "$tmp"
+          unzip -q "$tmp"/madcide-*-windows-x86_64.zip -d "$tmp"
+          echo "MADC=$(ls -d "$tmp"/madcide-*-windows-x86_64)/bin/madc.exe" >> "$GITHUB_ENV"
+          echo "MADCIDE_PACKAGE=$(ls "$tmp"/madcide-*-windows-x86_64.zip)" >> "$GITHUB_ENV"
       - name: build
         run: bash scripts/build.sh
       - name: tests
@@ -194,21 +196,21 @@ jobs:
           - runner: macos-15-intel
             arch: x86_64
     runs-on: ${{ matrix.runner }}
-    needs: madc
+    needs: madcide
     env:
-      MADC_TAG: ${{ needs.madc.outputs.tag }}
-      GH_TOKEN: ${{ secrets.MADC_RELEASES_TOKEN || github.token }}
+      MADCIDE_TAG: ${{ needs.madcide.outputs.tag }}
+      GH_TOKEN: ${{ secrets.MADCIDE_RELEASES_TOKEN || github.token }}
     steps:
       - uses: actions/checkout@v7
       - name: coreutils (gtimeout)
         run: brew install coreutils
-      - name: madc, from its release's tarball
+      - name: madcide and its madc, from madcide's release tarball
         run: |
-          gh release download "$MADC_TAG" -R "$MADC_REPO" -p "madc-*-macos-${{ matrix.arch }}.tar.gz" -D "$RUNNER_TEMP"
-          tar -xzf "$RUNNER_TEMP"/madc-*-macos-${{ matrix.arch }}.tar.gz -C "$RUNNER_TEMP"
-          folder=$(ls -d "$RUNNER_TEMP"/madc-*-macos-${{ matrix.arch }})
+          gh release download "$MADCIDE_TAG" -R "$MADCIDE_REPO" -p "madcide-*-macos-${{ matrix.arch }}.tar.gz" -D "$RUNNER_TEMP"
+          tar -xzf "$RUNNER_TEMP"/madcide-*-macos-${{ matrix.arch }}.tar.gz -C "$RUNNER_TEMP"
+          folder=$(ls -d "$RUNNER_TEMP"/madcide-*-macos-${{ matrix.arch }})
           echo "MADC=$folder/bin/madc" >> "$GITHUB_ENV"
-          echo "MADC_PACKAGE=$(ls "$RUNNER_TEMP"/madc-*-macos-${{ matrix.arch }}.tar.gz)" >> "$GITHUB_ENV"
+          echo "MADCIDE_PACKAGE=$(ls "$RUNNER_TEMP"/madcide-*-macos-${{ matrix.arch }}.tar.gz)" >> "$GITHUB_ENV"
       - name: build
         run: bash scripts/build.sh
       - name: tests
