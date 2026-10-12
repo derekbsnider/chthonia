@@ -4,6 +4,10 @@
 
 ## [v0.1.0] — 2026-10-11
 
+- New colours: VS Code's Dark+ scheme, in the window and in a terminal.
+- The editor numbers its lines and marks the line the caret is on.
+- In a terminal, the menu bar sits on the top row and the status bar on
+  the bottom one.
 - Chthonia is now built on madcide 0.7.0, the editor in its own home
   (https://github.com/derekbsnider/madcide), which carries the madc compiler
   it is built with. (Chthonia had been built directly with madc.)
