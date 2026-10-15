@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [v0.2.0] — 2026-10-15
+
+- Chthonia is now built on madcide 0.8.0, which carries madc 0.105.0.
+- The REPL shows code in colour: a line `:%p` prints, a `%type` answer and
+  each entry you type are coloured as `madc -i` colours them.
+- `%runall` in the REPL runs the REPL buffer again in a fresh session, each
+  entry with what it printed and its value.
+- An edit to the REPL buffer takes effect at once: a changed function is
+  redefined and a changed variable initialized again, and nothing else runs
+  again.
+- To build Chthonia you now need madcide 0.8.0.
+
 ## [v0.1.0] — 2026-10-11
 
 - New colours: VS Code's Dark+ scheme, in the window and in a terminal.

@@ -5,7 +5,7 @@ This page is for people who want to change Chthonia. To use it, see
 
 ## What you need
 
-- madcide 0.7.0, from
+- madcide 0.8.0, from
   [madcide's releases page](https://github.com/derekbsnider/madcide/releases):
   the IDE Chthonia is built on, which carries the madc compiler that builds
   Chthonia. Unpack its package anywhere (or install its `.deb`, in
