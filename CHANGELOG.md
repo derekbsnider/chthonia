@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [v0.3.0] — 2026-10-23
+
+- Chthonia is now built on madcide 0.9.0, which carries madc 0.106.0.
+- On Windows, Chthonia now keeps your settings in your `%APPDATA%` folder,
+  where Windows programs normally store them; before, it looked only in your
+  home folder.
+- When a project sits in a folder whose name has a dot in it, Chthonia now
+  saves that project's layout under the project's own name — a project
+  `proj.d/myproj` keeps its layout in `myproj.layout`, not a name cut short
+  at the dot.
+- To build Chthonia you now need madcide 0.9.0.
+
 ## [v0.2.0] — 2026-10-15
 
 - Chthonia is now built on madcide 0.8.0, which carries madc 0.105.0.
