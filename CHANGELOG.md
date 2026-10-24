@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [v0.3.1] — 2026-10-24
+
+- Chthonia is now built on madcide 0.9.1, which carries madc 0.106.1.
+- On Windows, running a program is quiet again: a program that includes a
+  system header no longer shows a `madc: pack spelled names: ...` line in its
+  output.
+- To build Chthonia you now need madcide 0.9.1.
+
 ## [v0.3.0] — 2026-10-23
 
 - Chthonia is now built on madcide 0.9.0, which carries madc 0.106.0.
